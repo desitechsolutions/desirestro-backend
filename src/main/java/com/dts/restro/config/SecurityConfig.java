@@ -49,7 +49,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/h2-console/**","/api/menu/**","/api/tables/**","/api/kot/**","/api/kot/table/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .headers(headers ->
