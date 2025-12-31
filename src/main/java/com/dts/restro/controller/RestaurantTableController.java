@@ -17,10 +17,14 @@ public class RestaurantTableController {
         this.restaurantTableRepository = restaurantTableRepository;
     }
 
-    @GetMapping
+    /*@GetMapping
     public List<RestaurantTable> getAllTables() {
         return restaurantTableRepository.findAllByOrderByTableNumberAsc();
     }
-
+*/
+    @GetMapping
+    public List<RestaurantTable> getAllTables() {
+        return restaurantTableRepository.findAll();
+    }
     // We'll add update status later when sending KOT
 }

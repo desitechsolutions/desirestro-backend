@@ -14,5 +14,5 @@ public interface KOTRepository extends JpaRepository<KOT, Long> {
     // For daily sequence
     int countByKotNumberStartingWith(String prefix);
 
-    List<KOT> findByTableId(Long tableId);
+    List<KOT> findByPartyId(Long partyId);
 }

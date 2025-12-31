@@ -2,6 +2,7 @@ package com.dts.restro.controller;
 
 import com.dts.restro.entity.KOT;
 import com.dts.restro.entity.KOTItem;
+import com.dts.restro.service.InventoryService;
 import com.dts.restro.service.KOTService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,15 +15,16 @@ import java.util.List;
 public class KOTController {
 
     private final KOTService kotService;
+    private final InventoryService inventoryService;
 
-    public KOTController(KOTService kotService) {
+    public KOTController(KOTService kotService, InventoryService inventoryService) {
         this.kotService = kotService;
+        this.inventoryService = inventoryService;
     }
 
-    @PostMapping
-    public ResponseEntity<KOT> createKOT(
-            @RequestBody CreateKOTRequest request) {
-        KOT kot = kotService.createKOT(request.tableId(), request.items());
+    @PostMapping("/party/{partyId}")
+    public ResponseEntity<KOT> createKOT(@PathVariable Long partyId, @RequestBody CreateKOTRequest request) {
+        KOT kot = kotService.createKOT(partyId, request.items());
         return ResponseEntity.ok(kot);
     }
 
@@ -34,21 +36,15 @@ public class KOTController {
     @PatchMapping("/{id}/ready")
     public ResponseEntity<KOT> markAsReady(@PathVariable Long id) {
         KOT kot = kotService.markAsReady(id);
+        // AUTO-DEDUCT INVENTORY
+        inventoryService.deductFromKOT(kot);
         return ResponseEntity.ok(kot);
     }
-
-    //Billing
-    @GetMapping("/table/{tableId}")
-    public List<KOT> getKOTsForTable(@PathVariable Long tableId) {
-        return kotService.getKOTsForTable(tableId);
-    }
-
-    @PatchMapping("/table/{tableId}/settle")
-    public ResponseEntity<String> settleTable(@PathVariable Long tableId) {
-        kotService.settleTable(tableId);
-        return ResponseEntity.ok("Table settled");
+    @GetMapping("/party/{partyId}")
+    public List<KOT> getKOTsByParty(@PathVariable Long partyId) {
+        return kotService.getKOTsByParty(partyId);
     }
 }
 
 // Record for request body
-record CreateKOTRequest(Long tableId, List<KOTItem> items) {}
+record CreateKOTRequest(List<KOTItem> items) {}
