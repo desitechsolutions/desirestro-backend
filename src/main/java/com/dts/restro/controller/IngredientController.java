@@ -1,40 +1,43 @@
 package com.dts.restro.controller;
 
-import com.dts.restro.entity.Ingredient;
-import com.dts.restro.repository.IngredientRepository;
+import com.dts.restro.dto.IngredientDTO;
+import com.dts.restro.service.IngredientService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/inventory/ingredients")
+@RequestMapping("/api/ingredients")
 @CrossOrigin(origins = "http://localhost:3000")
 public class IngredientController {
 
-    private final IngredientRepository ingredientRepository;
+    private final IngredientService ingredientService;
 
-    public IngredientController(IngredientRepository ingredientRepository) {
-        this.ingredientRepository = ingredientRepository;
+    public IngredientController(IngredientService ingredientService) {
+        this.ingredientService = ingredientService;
     }
 
     @GetMapping
-    public List<Ingredient> getAllIngredients() {
-        return ingredientRepository.findAll();
+    public List<IngredientDTO> getAllIngredients() {
+        return ingredientService.getAll();
     }
 
     @PostMapping
-    public Ingredient createIngredient(@RequestBody Ingredient ingredient) {
-        return ingredientRepository.save(ingredient);
+    public IngredientDTO createIngredient(@Valid @RequestBody IngredientDTO dto) {
+        return ingredientService.create(dto);
     }
 
     @PutMapping("/{id}")
-    public Ingredient updateIngredient(@PathVariable Long id, @RequestBody Ingredient updated) {
-        Ingredient ing = ingredientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ingredient not found"));
-        ing.setName(updated.getName());
-        ing.setUnit(updated.getUnit());
-        ing.setCurrentStock(updated.getCurrentStock());
-        ing.setReorderLevel(updated.getReorderLevel());
-        return ingredientRepository.save(ing);
+    public IngredientDTO updateIngredient(@PathVariable Long id,
+                                          @Valid @RequestBody IngredientDTO dto) {
+        return ingredientService.update(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteIngredient(@PathVariable Long id) {
+        ingredientService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

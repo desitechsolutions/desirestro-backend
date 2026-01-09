@@ -60,6 +60,17 @@ public class KOTService {
         return kotRepository.save(kot);
     }
 
+    public KOT markAsServed(Long kotId) {
+        KOT kot = kotRepository.findById(kotId)
+                .orElseThrow(() -> new RuntimeException("KOT not found"));
+        kot.setStatus("SERVED");
+        return kotRepository.save(kot);
+    }
+
+    public List<KOT> getReadyKOTs() {
+        return kotRepository.findByStatus("READY");
+    }
+
     public List<KOT> getKOTsByParty(Long partyId) {
         return kotRepository.findByPartyId(partyId);
     }

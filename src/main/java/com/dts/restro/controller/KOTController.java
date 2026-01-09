@@ -44,6 +44,17 @@ public class KOTController {
     public List<KOT> getKOTsByParty(@PathVariable Long partyId) {
         return kotService.getKOTsByParty(partyId);
     }
+
+    @GetMapping("/ready")
+    public List<KOT> getReadyKOTs() {
+        return kotService.getReadyKOTs();
+    }
+
+    @PatchMapping("/{id}/served")
+    public ResponseEntity<KOT> markAsServed(@PathVariable Long id) {
+        KOT kot = kotService.markAsServed(id);
+        return ResponseEntity.ok(kot);
+    }
 }
 
 // Record for request body

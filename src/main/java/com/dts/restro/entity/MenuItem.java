@@ -24,6 +24,7 @@ public class MenuItem {
     private boolean available = true;
 
     @ManyToOne
+    @JoinColumn(name = "category_id")
     private Category category;
 
     @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL)
