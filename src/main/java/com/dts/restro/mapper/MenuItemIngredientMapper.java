@@ -14,6 +14,7 @@ public interface MenuItemIngredientMapper {
     MenuItemIngredientDTO toDTO(MenuItemIngredient entity);
 
     @Mapping(source = "ingredientId", target = "ingredient.id")
+    @Mapping(target = "menuItem", ignore = true)
     MenuItemIngredient toEntity(MenuItemIngredientDTO dto);
 
     List<MenuItemIngredientDTO> toDTOList(List<MenuItemIngredient> entities);
