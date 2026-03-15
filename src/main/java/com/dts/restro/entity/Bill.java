@@ -1,18 +1,20 @@
 package com.dts.restro.entity;
 
+import com.dts.restro.common.entity.RestaurantAwareEntity;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "bill")
 @Data
-public class Bill {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@EqualsAndHashCode(callSuper = false)
+public class Bill extends RestaurantAwareEntity {
 
     @OneToOne
+    @JoinColumn(name = "party_id")
     private Party party;
 
     private double subtotal;

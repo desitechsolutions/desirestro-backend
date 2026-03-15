@@ -22,6 +22,10 @@ Thumbs.db
 # Spring Boot
 spring-shell.log
 *.log
+logs/
 
 # Test output
 surefire-reports/
+
+# Environment / secrets — NEVER commit real .env
+.env

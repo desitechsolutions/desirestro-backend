@@ -127,6 +127,12 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
+		<!-- AOP — required for RestaurantFilterAspect (multi-tenancy) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aspectj</artifactId>
+		</dependency>
+
 		<!-- Test Starters (already there, keep them) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

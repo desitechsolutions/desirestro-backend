@@ -6,6 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -33,6 +34,38 @@ public class User implements UserDetails {
 
     private String fullName;
 
+    /**
+     * The restaurant this user belongs to.
+     * For OWNER/ADMIN users this is their own restaurant.
+     * For staff users this is the restaurant they work at.
+     * Null only for SUPER_ADMIN users.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "restaurant_id")
+    private Restaurant restaurant;
+
+    /** Soft-delete / deactivation flag. Disabled users cannot log in. */
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean active = true;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
@@ -47,14 +80,6 @@ public class User implements UserDetails {
     @Override
     public boolean isCredentialsNonExpired() { return true; }
 
-    public String getUsername() {
-        return this.username;
-    }
-
-    public String getPassword() {
-        return this.password;
-    }
-
     @Override
-    public boolean isEnabled() { return true; }
+    public boolean isEnabled() { return active; }
 }

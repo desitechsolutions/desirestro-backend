@@ -1,18 +1,18 @@
 package com.dts.restro.entity;
 
+import com.dts.restro.common.entity.RestaurantAwareEntity;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "kot")
 @Data
-public class KOT {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@EqualsAndHashCode(callSuper = false)
+public class KOT extends RestaurantAwareEntity {
 
     private String kotNumber;
 
@@ -20,10 +20,8 @@ public class KOT {
     @JoinColumn(name = "party_id")
     private Party party;
 
-    @ElementCollection // This creates a separate table kot_items with kot_id FK
+    @ElementCollection
     private List<KOTItem> items = new ArrayList<>();
-
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     private String status = "NEW"; // NEW, PREPARING, READY, SERVED
 }

@@ -1,20 +1,22 @@
 package com.dts.restro.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.dts.restro.common.entity.RestaurantAwareEntity;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Table(name = "party")
 @Data
-public class Party {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@EqualsAndHashCode(callSuper = false)
+public class Party extends RestaurantAwareEntity {
 
     @ManyToOne
+    @JoinColumn(name = "table_id")
     private RestaurantTable table;
 
     private int occupiedSeats;

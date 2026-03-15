@@ -1,20 +1,21 @@
 package com.dts.restro.entity;
 
+import com.dts.restro.common.entity.RestaurantAwareEntity;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Entity
+@Table(name = "ingredient")
 @Data
-public class Ingredient {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@EqualsAndHashCode(callSuper = false)
+public class Ingredient extends RestaurantAwareEntity {
 
-    private String name; // e.g., "Chicken", "Rice", "Paneer"
+    private String name;
 
     private String unit; // "kg", "g", "litre", "pcs"
 
     private double currentStock;
 
-    private double reorderLevel; // Alert when below this
+    private double reorderLevel;
 }

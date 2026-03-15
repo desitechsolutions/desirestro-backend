@@ -1,17 +1,18 @@
 package com.dts.restro.entity;
 
+import com.dts.restro.common.entity.RestaurantAwareEntity;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "menu_item")
 @Data
-public class MenuItem {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@EqualsAndHashCode(callSuper = false)
+public class MenuItem extends RestaurantAwareEntity {
 
     private String name;
 
@@ -19,7 +20,7 @@ public class MenuItem {
 
     private double price;
 
-    private boolean veg = true; // true = veg, false = non-veg
+    private boolean veg = true;
 
     private boolean available = true;
 

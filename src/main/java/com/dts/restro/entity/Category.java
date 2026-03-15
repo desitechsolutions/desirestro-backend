@@ -1,18 +1,19 @@
 package com.dts.restro.entity;
 
+import com.dts.restro.common.entity.RestaurantAwareEntity;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
 @Entity
+@Table(name = "category")
 @Data
-public class Category {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@EqualsAndHashCode(callSuper = false)
+public class Category extends RestaurantAwareEntity {
 
-    private String name; // e.g., Starters, Main Course, Desserts
+    private String name;
 
     private Integer displayOrder;
 

@@ -1,18 +1,18 @@
 package com.dts.restro.entity;
 
+import com.dts.restro.common.entity.RestaurantAwareEntity;
 import com.dts.restro.enums.LeaveStatus;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "leave_request")
 @Data
-public class Leave {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@EqualsAndHashCode(callSuper = false)
+public class Leave extends RestaurantAwareEntity {
 
     @ManyToOne
     @JoinColumn(name = "staff_id")
