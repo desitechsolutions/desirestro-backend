@@ -3,6 +3,9 @@ package com.dts.restro.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Data
 public class MenuItem {
@@ -21,5 +24,9 @@ public class MenuItem {
     private boolean available = true;
 
     @ManyToOne
+    @JoinColumn(name = "category_id")
     private Category category;
+
+    @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL)
+    private List<MenuItemIngredient> ingredients = new ArrayList<>();
 }

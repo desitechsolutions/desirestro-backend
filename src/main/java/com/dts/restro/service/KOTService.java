@@ -2,6 +2,7 @@ package com.dts.restro.service;
 
 import com.dts.restro.entity.*;
 import com.dts.restro.repository.KOTRepository;
+import com.dts.restro.repository.PartyRepository;
 import com.dts.restro.repository.RestaurantTableRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,26 +16,26 @@ import java.util.List;
 public class KOTService {
 
     private final KOTRepository kotRepository;
-    private final RestaurantTableRepository tableRepository;
+    private final PartyRepository partyRepository;
 
-    public KOTService(KOTRepository kotRepository, RestaurantTableRepository tableRepository) {
+    public KOTService(KOTRepository kotRepository, PartyRepository partyRepository) {
         this.kotRepository = kotRepository;
-        this.tableRepository = tableRepository;
+        this.partyRepository = partyRepository;
     }
 
     public KOT createKOT(Long tableId, List<KOTItem> items) {
-        RestaurantTable table = tableRepository.findById(tableId)
+        Party party = partyRepository.findById(tableId)
                 .orElseThrow(() -> new RuntimeException("Table not found"));
 
         KOT kot = new KOT();
-        kot.setTable(table);
+        kot.setParty(party);
         kot.setItems(items);
         kot.setKotNumber(generateKotNumber());
         kot.setStatus("NEW");
 
         // Update table status
-        table.setStatus("OCCUPIED");
-        tableRepository.save(table);
+        /*table.setStatus("OCCUPIED");
+        tableRepository.save(table);*/
 
         return kotRepository.save(kot);
     }
@@ -59,14 +60,29 @@ public class KOTService {
         return kotRepository.save(kot);
     }
 
-    public List<KOT> getKOTsForTable(Long tableId) {
-        return kotRepository.findByTableId(tableId);
+    public KOT markAsServed(Long kotId) {
+        KOT kot = kotRepository.findById(kotId)
+                .orElseThrow(() -> new RuntimeException("KOT not found"));
+        kot.setStatus("SERVED");
+        return kotRepository.save(kot);
     }
 
-    public void settleTable(Long tableId) {
+    public List<KOT> getReadyKOTs() {
+        return kotRepository.findByStatus("READY");
+    }
+
+    public List<KOT> getKOTsByParty(Long partyId) {
+        return kotRepository.findByPartyId(partyId);
+    }
+
+    /*public List<KOT> getKOTsForTable(Long tableId) {
+        return kotRepository.findByTableId(tableId);
+    }*/
+
+/*    public void settleTable(Long tableId) {
         RestaurantTable table = tableRepository.findById(tableId)
                 .orElseThrow(() -> new RuntimeException("Table not found"));
         table.setStatus("EMPTY");
         tableRepository.save(table);
-    }
+    }*/
 }

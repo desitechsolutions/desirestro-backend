@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -13,13 +14,14 @@ public class KOT {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String kotNumber; // e.g., KOT-20251230-0001
+    private String kotNumber;
 
     @ManyToOne
-    private RestaurantTable table;
+    @JoinColumn(name = "party_id")
+    private Party party;
 
-    @ElementCollection
-    private List<KOTItem> items;
+    @ElementCollection // This creates a separate table kot_items with kot_id FK
+    private List<KOTItem> items = new ArrayList<>();
 
     private LocalDateTime createdAt = LocalDateTime.now();
 

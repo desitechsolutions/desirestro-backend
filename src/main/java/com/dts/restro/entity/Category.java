@@ -14,7 +14,7 @@ public class Category {
 
     private String name; // e.g., Starters, Main Course, Desserts
 
-    private int displayOrder;
+    private Integer displayOrder;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<MenuItem> items;

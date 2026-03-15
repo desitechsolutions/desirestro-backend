@@ -49,7 +49,9 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/h2-console/**","/api/menu/**","/api/tables/**","/api/kot/**","/api/kot/table/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/h2-console/**",
+                                "/error","/api/menu/**","/api/tables/**","/api/kot/**","/api/kot/party/**","/api/parties/**","/api/parties/table/**","/api/bills/**","/api/bills/party/**","/api/inventory/**","/api/staff/**","/api/admin/**"
+                        ,"/api/ingredients/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .headers(headers ->

@@ -17,13 +17,14 @@ public class RestaurantTable {
 
     private String tableNumber; // e.g., "T1", "T2"
 
-    private int seats;
+    private int capacity;
 
+    private int occupiedSeats = 0;
     private String status = "EMPTY"; // EMPTY, OCCUPIED, BILLING, DIRTY
 
     private String currentCaptain; // username of captain handling it (optional)
 
     @OneToMany(mappedBy = "table", cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<KOT> kots;
+    private List<Party> parties;
 }
