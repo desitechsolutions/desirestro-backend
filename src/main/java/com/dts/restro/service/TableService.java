@@ -46,4 +46,11 @@ public class TableService {
     public List<RestaurantTable> getTablesByStatus(String status) {
         return tableRepository.findByStatus(status.toUpperCase());
     }
+
+    public RestaurantTable updateTableStatus(Long id, String status) {
+        RestaurantTable t = tableRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Table not found"));
+        t.setStatus(status.toUpperCase());
+        return tableRepository.save(t);
+    }
 }

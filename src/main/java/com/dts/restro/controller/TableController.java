@@ -41,4 +41,13 @@ public class TableController {
         tableService.deleteTable(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<RestaurantTable> updateTableStatus(
+            @PathVariable Long id,
+            @RequestBody TableStatusRequest request) {
+        return ResponseEntity.ok(tableService.updateTableStatus(id, request.status()));
+    }
 }
+
+record TableStatusRequest(String status) {}

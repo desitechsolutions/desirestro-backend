@@ -11,6 +11,6 @@ import java.util.Optional;
 public interface MenuItemRepository extends JpaRepository<MenuItem, Long> {
     List<MenuItem> findByCategoryIdAndAvailableTrue(Long categoryId);
     List<MenuItem> findByAvailableTrue();
-
     List<MenuItem> findByName(String name);
+    List<MenuItem> findByNameContainingIgnoreCaseAndAvailableTrue(String name);
 }

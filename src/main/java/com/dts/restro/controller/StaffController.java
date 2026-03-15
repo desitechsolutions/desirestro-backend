@@ -30,6 +30,11 @@ public class StaffController {
         return staffService.createStaff(staff);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<StaffDTO> getStaffById(@PathVariable Long id) {
+        return ResponseEntity.ok(staffService.getStaffById(id));
+    }
+
     @PutMapping("/{id}")
     public StaffDTO updateStaff(@PathVariable Long id, @RequestBody StaffDTO dto) {
         return staffService.updateStaff(id, dto);

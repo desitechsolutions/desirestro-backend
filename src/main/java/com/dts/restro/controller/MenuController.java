@@ -49,9 +49,14 @@ public class MenuController {
 
     // GET all available items (flat list - useful for KOT/search)
     @GetMapping("/available-items")
-    public List<MenuItemResponse> getAllAvailableItems() {
-        return menuItemRepository.findByAvailableTrue()
-                .stream()
+    public List<MenuItemResponse> getAllAvailableItems(@RequestParam(required = false) String search) {
+        List<MenuItem> items;
+        if (search != null && !search.isBlank()) {
+            items = menuItemRepository.findByNameContainingIgnoreCaseAndAvailableTrue(search);
+        } else {
+            items = menuItemRepository.findByAvailableTrue();
+        }
+        return items.stream()
                 .map(item -> new MenuItemResponse(
                         item.getId(),
                         item.getName(),
