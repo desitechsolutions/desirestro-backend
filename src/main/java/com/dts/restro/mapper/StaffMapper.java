@@ -17,6 +17,7 @@ public interface StaffMapper {
     @Mapping(source = "user.id", target = "userId")
     @Mapping(source = "user.username", target = "username")
     @Mapping(source = "user.role", target = "role")
+    @Mapping(source = "joinDate", target = "joinDate")
     StaffDTO toDTO(Staff staff);
 
     /* ============================

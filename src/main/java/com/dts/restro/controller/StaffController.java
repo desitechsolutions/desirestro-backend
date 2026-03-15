@@ -3,10 +3,8 @@ package com.dts.restro.controller;
 import com.dts.restro.dto.AttendanceDTO;
 import com.dts.restro.dto.LeaveDTO;
 import com.dts.restro.dto.StaffDTO;
-import com.dts.restro.entity.Attendance;
-import com.dts.restro.entity.Leave;
-import com.dts.restro.entity.Staff;
 import com.dts.restro.service.StaffService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +28,22 @@ public class StaffController {
     @PostMapping
     public StaffDTO createStaff(@RequestBody StaffDTO staff) {
         return staffService.createStaff(staff);
+    }
+
+    @PutMapping("/{id}")
+    public StaffDTO updateStaff(@PathVariable Long id, @RequestBody StaffDTO dto) {
+        return staffService.updateStaff(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteStaff(@PathVariable Long id) {
+        staffService.deleteStaff(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/leaves")
+    public List<LeaveDTO> getLeavesByStaff(@PathVariable Long id) {
+        return staffService.getLeavesByStaff(id);
     }
 
     @PostMapping("/{id}/clock-in")

@@ -14,4 +14,5 @@ public class StaffDTO {
     private String phone;
     private String email;
     private Role role;
+    private LocalDate joinDate;
 }

@@ -42,4 +42,14 @@ public class InventoryService {
                 .filter(i -> i.getCurrentStock() < i.getReorderLevel())
                 .toList();
     }
+
+    public Ingredient restock(Long ingredientId, double quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Restock quantity must be positive");
+        }
+        Ingredient ingredient = ingredientRepo.findById(ingredientId)
+                .orElseThrow(() -> new RuntimeException("Ingredient not found with id: " + ingredientId));
+        ingredient.setCurrentStock(ingredient.getCurrentStock() + quantity);
+        return ingredientRepo.save(ingredient);
+    }
 }

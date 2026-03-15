@@ -4,6 +4,7 @@ import com.dts.restro.entity.Bill;
 import com.dts.restro.entity.KOT;
 import com.dts.restro.entity.Party;
 import com.dts.restro.entity.RestaurantTable;
+import com.dts.restro.exception.ResourceNotFoundException;
 import com.dts.restro.repository.BillRepository;
 import com.dts.restro.repository.KOTRepository;
 import com.dts.restro.repository.PartyRepository;
@@ -81,5 +82,19 @@ public class BillService {
         tableRepository.save(table);
 
         return bill;
+    }
+
+    public Bill getBillById(Long id) {
+        return billRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + id));
+    }
+
+    public Bill getBillByParty(Long partyId) {
+        return billRepository.findByPartyId(partyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found for party: " + partyId));
+    }
+
+    public List<Bill> getAllBills() {
+        return billRepository.findAllByOrderByPaidAtDesc();
     }
 }

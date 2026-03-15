@@ -19,7 +19,10 @@ public class TableController {
     }
 
     @GetMapping
-    public List<RestaurantTable> getAllTables() {
+    public List<RestaurantTable> getAllTables(@RequestParam(required = false) String status) {
+        if (status != null && !status.isBlank()) {
+            return tableService.getTablesByStatus(status);
+        }
         return tableService.getAllTables();
     }
 

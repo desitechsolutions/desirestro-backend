@@ -40,6 +40,10 @@ public class TableService {
     }
 
     public List<RestaurantTable> getAllTables() {
-        return tableRepository.findAll();
+        return tableRepository.findAllByOrderByTableNumberAsc();
+    }
+
+    public List<RestaurantTable> getTablesByStatus(String status) {
+        return tableRepository.findByStatus(status.toUpperCase());
     }
 }

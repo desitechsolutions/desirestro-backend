@@ -8,9 +8,14 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BillRepository extends JpaRepository<Bill, Long> {
+
+    Optional<Bill> findByPartyId(Long partyId);
+
+    List<Bill> findAllByOrderByPaidAtDesc();
 
     @Query("SELECT COALESCE(SUM(b.total), 0), COUNT(b) FROM Bill b WHERE b.paidAt BETWEEN :start AND :end")
     List<Object[]> getDailyBillStats(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);

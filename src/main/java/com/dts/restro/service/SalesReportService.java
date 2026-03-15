@@ -29,7 +29,7 @@ public class SalesReportService {
         LocalDateTime endOfDay = today.atTime(23, 59, 59);
 
         List<Object[]> billResults = billRepository.getDailyBillStats(startOfDay, endOfDay);
-        List<Object[]> itemResults = kotRepository.getDailyItemStats(startOfDay, endOfDay);
+        Long totalItemCount = kotRepository.getDailyItemCount(startOfDay, endOfDay);
 
         double revenue = 0;
         int bills = 0;
@@ -39,9 +39,7 @@ public class SalesReportService {
             bills = ((Number) row[1]).intValue();
         }
 
-        int totalItems = itemResults.stream()
-                .mapToInt(row -> ((Number) row[1]).intValue())
-                .sum();
+        int totalItems = totalItemCount != null ? totalItemCount.intValue() : 0;
 
         double avgBill = bills > 0 ? revenue / bills : 0;
 

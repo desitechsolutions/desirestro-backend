@@ -2,6 +2,7 @@ package com.dts.restro.controller;
 
 import com.dts.restro.entity.Party;
 import com.dts.restro.service.PartyService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +24,17 @@ public class PartyController {
     }
     @GetMapping("/table/{tableId}")
     public List<Party> getPartiesByTable(@PathVariable Long tableId) {
-        return partyService.getPartiesByTable(tableId); // You'll need this in service
+        return partyService.getPartiesByTable(tableId);
+    }
+
+    @GetMapping("/active")
+    public List<Party> getAllActiveParties() {
+        return partyService.getAllActiveParties();
+    }
+
+    @GetMapping("/{partyId}")
+    public ResponseEntity<Party> getPartyById(@PathVariable Long partyId) {
+        return ResponseEntity.ok(partyService.getPartyById(partyId));
     }
 }
 

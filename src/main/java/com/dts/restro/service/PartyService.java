@@ -5,10 +5,12 @@ import com.dts.restro.entity.RestaurantTable;
 import com.dts.restro.repository.PartyRepository;
 import com.dts.restro.repository.RestaurantTableRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional
 public class PartyService {
 
     private final PartyRepository partyRepository;
@@ -59,5 +61,14 @@ public class PartyService {
 
     public List<Party> getPartiesByTable(Long tableId) {
         return partyRepository.findByTableIdAndStatus(tableId, "ACTIVE");
+    }
+
+    public List<Party> getAllActiveParties() {
+        return partyRepository.findByStatus("ACTIVE");
+    }
+
+    public Party getPartyById(Long partyId) {
+        return partyRepository.findById(partyId)
+                .orElseThrow(() -> new RuntimeException("Party not found"));
     }
 }

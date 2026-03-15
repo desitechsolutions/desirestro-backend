@@ -117,7 +117,7 @@ public class StaffService {
                 .map(leaveMapper::toDTO).toList();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public LeaveDTO applyLeave(LeaveDTO leaveDTO) {
         Staff staff = staffRepository.findById(leaveDTO.getStaffId())
                 .orElseThrow(() -> new RuntimeException("No Staff found"));
@@ -134,7 +134,7 @@ public class StaffService {
         return leaveMapper.toDTO(savedLeave);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public LeaveDTO approveLeave(Long leaveId) {
         Leave leave = leaveRepository.findById(leaveId)
                 .orElseThrow(() -> new RuntimeException("Leave not found"));
@@ -143,7 +143,7 @@ public class StaffService {
         return leaveMapper.toDTO(leaveRepository.save(leave));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public LeaveDTO rejectLeave(Long leaveId) {
         Leave leave = leaveRepository.findById(leaveId)
                 .orElseThrow(() -> new RuntimeException("Leave not found"));
@@ -153,5 +153,37 @@ public class StaffService {
 
     public StaffDTO getStaffById(Long id) {
         return staffMapper.toDTO(staffRepository.findById(id).orElseThrow(() -> new RuntimeException("No Staff Found")));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public StaffDTO updateStaff(Long id, StaffDTO dto) {
+        Staff staff = staffRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Staff not found"));
+
+        staff.setFullName(dto.getFullName());
+        staff.setPhone(dto.getPhone());
+        staff.setEmail(dto.getEmail());
+
+        // Update linked user role if changed
+        if (dto.getRole() != null) {
+            staff.getUser().setRole(dto.getRole());
+            userRepository.save(staff.getUser());
+        }
+
+        return staffMapper.toDTO(staffRepository.save(staff));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteStaff(Long id) {
+        Staff staff = staffRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Staff not found"));
+        staffRepository.delete(staff);
+    }
+
+    public List<LeaveDTO> getLeavesByStaff(Long staffId) {
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new RuntimeException("Staff not found"));
+        return leaveRepository.findByStaffOrderByAppliedDateDesc(staff).stream()
+                .map(leaveMapper::toDTO).toList();
     }
 }
