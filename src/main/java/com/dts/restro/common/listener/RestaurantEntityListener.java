@@ -3,7 +3,7 @@ package com.dts.restro.common.listener;
 import com.dts.restro.common.TenantContext;
 import com.dts.restro.common.entity.RestaurantAwareEntity;
 import com.dts.restro.common.util.SpringContext;
-import com.dts.restro.entity.Restaurant;
+import com.dts.restro.restaurant.entity.Restaurant;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;

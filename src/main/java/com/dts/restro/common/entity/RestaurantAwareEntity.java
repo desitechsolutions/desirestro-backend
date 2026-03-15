@@ -1,7 +1,7 @@
 package com.dts.restro.common.entity;
 
 import com.dts.restro.common.listener.RestaurantEntityListener;
-import com.dts.restro.entity.Restaurant;
+import com.dts.restro.restaurant.entity.Restaurant;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

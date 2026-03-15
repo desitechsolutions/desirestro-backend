@@ -1,6 +1,6 @@
 package com.dts.restro.config;
 
-import com.dts.restro.security.JwtAuthenticationFilter;
+import com.dts.restro.auth.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -65,7 +65,10 @@ public class SecurityConfig {
                     "/api/auth/login",
                     "/api/auth/register",
                     "/api/auth/refresh",
-                    "/api/auth/logout"
+                    "/api/auth/logout",
+                    "/api/auth/forgot-password",
+                    "/api/auth/reset-password",
+                    "/api/auth/validate-reset-token"
                 ).permitAll()
                 // ── OpenAPI / Swagger UI ───────────────────────────────────
                 .requestMatchers(

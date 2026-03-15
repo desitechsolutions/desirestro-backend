@@ -1,0 +1,90 @@
+package com.dts.restro.staff.controller;
+
+import com.dts.restro.staff.dto.AttendanceDTO;
+import com.dts.restro.staff.dto.LeaveDTO;
+import com.dts.restro.staff.dto.StaffDTO;
+import com.dts.restro.staff.service.StaffService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/staff")
+@CrossOrigin(origins = "http://localhost:3000")
+public class StaffController {
+
+    private final StaffService staffService;
+
+    public StaffController(StaffService staffService) {
+        this.staffService = staffService;
+    }
+
+    @GetMapping
+    public List<StaffDTO> getAllStaff() {
+        return staffService.getAllStaff();
+    }
+
+    @PostMapping
+    public StaffDTO createStaff(@RequestBody StaffDTO staff) {
+        return staffService.createStaff(staff);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<StaffDTO> getStaffById(@PathVariable Long id) {
+        return ResponseEntity.ok(staffService.getStaffById(id));
+    }
+
+    @PutMapping("/{id}")
+    public StaffDTO updateStaff(@PathVariable Long id, @RequestBody StaffDTO dto) {
+        return staffService.updateStaff(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteStaff(@PathVariable Long id) {
+        staffService.deleteStaff(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/leaves")
+    public List<LeaveDTO> getLeavesByStaff(@PathVariable Long id) {
+        return staffService.getLeavesByStaff(id);
+    }
+
+    @PostMapping("/{id}/clock-in")
+    public AttendanceDTO clockIn(@PathVariable Long id) {
+        StaffDTO staff = staffService.getStaffById(id); // Add this method
+        return staffService.clockIn(staff);
+    }
+
+    @PostMapping("/{id}/clock-out")
+    public AttendanceDTO clockOut(@PathVariable Long id) {
+        return staffService.clockOut(id);
+    }
+
+
+    @GetMapping("/attendance/today")
+    public List<AttendanceDTO> getTodayAttendance() {
+        return staffService.getTodayAttendance();
+    }
+
+    @GetMapping("/leaves/pending")
+    public List<LeaveDTO> getPendingLeaves() {
+        return staffService.getPendingLeaves();
+    }
+
+    @PostMapping("/leaves")
+    public LeaveDTO applyLeave(@RequestBody LeaveDTO leave) {
+        return staffService.applyLeave(leave);
+    }
+
+    @PatchMapping("/leaves/{id}/approve")
+    public LeaveDTO approveLeave(@PathVariable Long id) {
+        return staffService.approveLeave(id);
+    }
+
+    @PatchMapping("/leaves/{id}/reject")
+    public LeaveDTO rejectLeave(@PathVariable Long id) {
+        return staffService.rejectLeave(id);
+    }
+}
