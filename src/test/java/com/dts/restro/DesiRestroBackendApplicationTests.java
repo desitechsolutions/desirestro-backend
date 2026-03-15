@@ -6,11 +6,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application.properties")
+@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application.properties",
+        properties = "spring.profiles.active=test")
 class DesiRestroBackendApplicationTests {
 
-@Test
-void contextLoads() {
-}
+    @Test
+    void contextLoads() {
+    }
 
 }

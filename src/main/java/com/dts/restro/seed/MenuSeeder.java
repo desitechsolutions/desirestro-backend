@@ -3,8 +3,17 @@
 
 package com.dts.restro.seed;
 
-import com.dts.restro.entity.*;
-import com.dts.restro.repository.*;
+import com.dts.restro.menu.entity.Category;
+import com.dts.restro.menu.entity.MenuItem;
+import com.dts.restro.menu.entity.MenuItemIngredient;
+import com.dts.restro.menu.entity.MenuItemIngredientId;
+import com.dts.restro.inventory.entity.Ingredient;
+import com.dts.restro.order.entity.RestaurantTable;
+import com.dts.restro.menu.repository.CategoryRepository;
+import com.dts.restro.menu.repository.MenuItemRepository;
+import com.dts.restro.menu.repository.MenuItemIngredientRepository;
+import com.dts.restro.inventory.repository.IngredientRepository;
+import com.dts.restro.order.repository.RestaurantTableRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
