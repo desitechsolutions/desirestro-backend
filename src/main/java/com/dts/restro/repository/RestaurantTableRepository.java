@@ -9,4 +9,5 @@ import java.util.List;
 public interface RestaurantTableRepository extends JpaRepository<RestaurantTable, Long> {
     List<RestaurantTable> findAllByOrderByTableNumberAsc();
     Boolean existsByTableNumber(String tableNumber);
+    List<RestaurantTable> findByStatus(String status);
 }

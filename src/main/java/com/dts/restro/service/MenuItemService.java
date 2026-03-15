@@ -5,18 +5,21 @@ import com.dts.restro.entity.Category;
 import com.dts.restro.entity.Ingredient;
 import com.dts.restro.entity.MenuItem;
 import com.dts.restro.entity.MenuItemIngredient;
+import com.dts.restro.exception.ResourceNotFoundException;
 import com.dts.restro.mapper.MenuItemIngredientMapper;
 import com.dts.restro.mapper.MenuItemMapper;
 import com.dts.restro.repository.CategoryRepository;
 import com.dts.restro.repository.IngredientRepository;
 import com.dts.restro.repository.MenuItemRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class MenuItemService {
 
     private final MenuItemRepository menuItemRepository;
@@ -44,12 +47,10 @@ public class MenuItemService {
     public MenuItemDTO createMenuItem(MenuItemDTO dto) {
         MenuItem item = menuItemMapper.toEntity(dto);
 
-        // Set category
         Category category = categoryRepository.findById(dto.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + dto.getCategoryId()));
         item.setCategory(category);
 
-        // Map ingredients
         if (dto.getIngredients() != null && !dto.getIngredients().isEmpty()) {
             List<Long> ingredientIds = dto.getIngredients().stream()
                     .map(i -> i.getIngredientId())
@@ -90,8 +91,8 @@ public class MenuItemService {
             item.setCategory(category);
         }
 
-        // Handle ingredients efficiently
-        item.getIngredients().clear(); // make sure orphanRemoval = true in MenuItem entity
+        // orphanRemoval=true on MenuItem.ingredients handles deletion of old records
+        item.getIngredients().clear();
         if (dto.getIngredients() != null && !dto.getIngredients().isEmpty()) {
             List<Long> ingredientIds = dto.getIngredients().stream()
                     .map(i -> i.getIngredientId())
@@ -121,12 +122,5 @@ public class MenuItemService {
             throw new ResourceNotFoundException("Menu item not found with id: " + id);
         }
         menuItemRepository.deleteById(id);
-    }
-
-    // Custom exception for better clarity
-    public static class ResourceNotFoundException extends RuntimeException {
-        public ResourceNotFoundException(String message) {
-            super(message);
-        }
     }
 }

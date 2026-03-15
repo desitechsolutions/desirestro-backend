@@ -23,7 +23,7 @@ public interface KOTRepository extends JpaRepository<KOT, Long> {
     @Query("SELECT COALESCE(SUM(ki.quantity), 0) " +
             "FROM KOT k JOIN k.items ki " +
             "WHERE k.createdAt BETWEEN :start AND :end")
-    List<Object[]> getDailyItemStats(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    Long getDailyItemCount(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("SELECT ki.menuItemName, SUM(ki.quantity), SUM(ki.quantity * ki.price) " +
             "FROM KOT k JOIN k.items ki " +

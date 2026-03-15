@@ -19,7 +19,10 @@ public class TableController {
     }
 
     @GetMapping
-    public List<RestaurantTable> getAllTables() {
+    public List<RestaurantTable> getAllTables(@RequestParam(required = false) String status) {
+        if (status != null && !status.isBlank()) {
+            return tableService.getTablesByStatus(status);
+        }
         return tableService.getAllTables();
     }
 
@@ -38,4 +41,13 @@ public class TableController {
         tableService.deleteTable(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<RestaurantTable> updateTableStatus(
+            @PathVariable Long id,
+            @RequestBody TableStatusRequest request) {
+        return ResponseEntity.ok(tableService.updateTableStatus(id, request.status()));
+    }
 }
+
+record TableStatusRequest(String status) {}

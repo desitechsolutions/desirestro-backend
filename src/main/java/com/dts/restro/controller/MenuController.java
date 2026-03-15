@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-/*@RequestMapping("/api/menu")*/
+@RequestMapping("/api/menu")
 @CrossOrigin(origins = "http://localhost:3000")
 public class MenuController {
 
@@ -23,8 +23,8 @@ public class MenuController {
         this.menuItemRepository = menuItemRepository;
     }
 
-    // GET all categories with their available items
-    @GetMapping("/categories")
+    // GET all categories with their available items (grouped view for POS/customer display)
+    @GetMapping
     public List<CategoryResponse> getCategoriesWithItems() {
         return categoryRepository.findAllByOrderByDisplayOrderAsc()
                 .stream()
@@ -47,11 +47,16 @@ public class MenuController {
                 .toList();
     }
 
-    // GET all available items (flat list - useful for search later)
-    @GetMapping("/items")
-    public List<MenuItemResponse> getAllAvailableItems() {
-        return menuItemRepository.findByAvailableTrue()
-                .stream()
+    // GET all available items (flat list - useful for KOT/search)
+    @GetMapping("/available-items")
+    public List<MenuItemResponse> getAllAvailableItems(@RequestParam(required = false) String search) {
+        List<MenuItem> items;
+        if (search != null && !search.isBlank()) {
+            items = menuItemRepository.findByNameContainingIgnoreCaseAndAvailableTrue(search);
+        } else {
+            items = menuItemRepository.findByAvailableTrue();
+        }
+        return items.stream()
                 .map(item -> new MenuItemResponse(
                         item.getId(),
                         item.getName(),

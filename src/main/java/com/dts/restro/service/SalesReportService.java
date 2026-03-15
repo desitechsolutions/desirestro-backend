@@ -29,7 +29,7 @@ public class SalesReportService {
         LocalDateTime endOfDay = today.atTime(23, 59, 59);
 
         List<Object[]> billResults = billRepository.getDailyBillStats(startOfDay, endOfDay);
-        List<Object[]> itemResults = kotRepository.getDailyItemStats(startOfDay, endOfDay);
+        Long totalItemCount = kotRepository.getDailyItemCount(startOfDay, endOfDay);
 
         double revenue = 0;
         int bills = 0;
@@ -39,9 +39,7 @@ public class SalesReportService {
             bills = ((Number) row[1]).intValue();
         }
 
-        int totalItems = itemResults.stream()
-                .mapToInt(row -> ((Number) row[1]).intValue())
-                .sum();
+        int totalItems = totalItemCount != null ? totalItemCount.intValue() : 0;
 
         double avgBill = bills > 0 ? revenue / bills : 0;
 
@@ -89,6 +87,32 @@ public class SalesReportService {
             String dayName = date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
             double amount = ((Number) row[1]).doubleValue();
             revenueMap.put(dayName, amount);
+        });
+
+        return revenueMap.entrySet().stream()
+                .map(entry -> {
+                    WeeklyRevenueDTO dto = new WeeklyRevenueDTO();
+                    dto.setDay(entry.getKey());
+                    dto.setRevenue(entry.getValue());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<WeeklyRevenueDTO> getRevenueByDateRange(LocalDate from, LocalDate to) {
+        List<Object[]> results = billRepository.getRevenueByDay(from.atStartOfDay(), to.atTime(23, 59, 59));
+
+        Map<String, Double> revenueMap = new LinkedHashMap<>();
+        long days = java.time.temporal.ChronoUnit.DAYS.between(from, to) + 1;
+        for (int i = 0; i < days; i++) {
+            LocalDate date = from.plusDays(i);
+            revenueMap.put(date.toString(), 0.0);
+        }
+
+        results.forEach(row -> {
+            LocalDate date = ((java.sql.Date) row[0]).toLocalDate();
+            double amount = ((Number) row[1]).doubleValue();
+            revenueMap.put(date.toString(), amount);
         });
 
         return revenueMap.entrySet().stream()
