@@ -61,7 +61,16 @@ public class Restaurant {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    private boolean active = true;
+    @Column(nullable = false)
+    private Boolean active = true;
+    
+    public Boolean getActive() {
+        return active;
+    }
+    
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
 
     @PrePersist
     protected void onCreate() {

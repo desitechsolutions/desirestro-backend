@@ -22,7 +22,7 @@ public class ApiResponse<T> {
     private T data;
 
     /** Convenience factory for successful responses */
-    public static <T> ApiResponse<T> success(String message, T data) {
+    public static <T> ApiResponse<T> success(T data, String message) {
         return new ApiResponse<>("success", message, data);
     }
 
