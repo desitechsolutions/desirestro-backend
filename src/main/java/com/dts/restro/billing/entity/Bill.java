@@ -245,5 +245,3 @@ public class Bill {
 }
 
 // Made with Bob
-
-// Made with Bob

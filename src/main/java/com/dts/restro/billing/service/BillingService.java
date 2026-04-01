@@ -67,7 +67,7 @@ public class BillingService {
         bill.setBillNumber(generateBillNumber(restaurantId));
         bill.setBillTime(LocalDateTime.now());
         bill.setTableNumber(kot.getParty() != null && kot.getParty().getTable() != null
-                ? Integer.parseInt(kot.getParty().getTable().getTableNumber()) : null);
+                ? parseTableNumber(kot.getParty().getTable().getTableNumber()) : null);
         bill.setCustomerId(request.getCustomerId());
         bill.setTaxType(request.getTaxType());
         bill.setPaymentMethod(request.getPaymentMethod());
@@ -94,6 +94,16 @@ public class BillingService {
         }
         
         return toBillDTO(savedBill, billItems);
+    }
+
+    private Integer parseTableNumber(String tableNumber) {
+        if (tableNumber == null || tableNumber.isBlank()) return null;
+        try {
+            return Integer.parseInt(tableNumber.trim());
+        } catch (NumberFormatException e) {
+            log.warn("Non-numeric table number '{}'; storing null", tableNumber);
+            return null;
+        }
     }
 
     /**
