@@ -26,6 +26,11 @@ public class ApiResponse<T> {
         return new ApiResponse<>("success", message, data);
     }
 
+    /** Convenience factory for successful responses without a custom message */
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>("success", "Success", data);
+    }
+
     /** Convenience factory for error responses */
     public static <T> ApiResponse<T> error(String message) {
         return new ApiResponse<>("error", message, null);

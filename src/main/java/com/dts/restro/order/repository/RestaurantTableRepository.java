@@ -10,4 +10,6 @@ public interface RestaurantTableRepository extends JpaRepository<RestaurantTable
     List<RestaurantTable> findAllByOrderByTableNumberAsc();
     Boolean existsByTableNumber(String tableNumber);
     List<RestaurantTable> findByStatus(String status);
+
+    long countByRestaurantId(Long restaurantId);
 }

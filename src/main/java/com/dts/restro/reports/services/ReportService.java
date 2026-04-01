@@ -465,8 +465,8 @@ public class ReportService {
                 return SalesReportDTO.TopCustomerDTO.builder()
                     .customerId(customerId)
                     .customerName(customer.getName())
-                    .customerPhone(customer.getPhone())
-                    .totalOrders(customerBills.size())
+                    .phone(customer.getPhone())
+                    .orderCount(customerBills.size())
                     .totalSpent(totalSpent)
                     .averageOrderValue(totalSpent.divide(BigDecimal.valueOf(customerBills.size()), 2, RoundingMode.HALF_UP))
                     .build();
@@ -654,6 +654,7 @@ public class ReportService {
                         .build();
                 }
             ));
+    }
     
     // ==================== EXPORT METHODS ====================
     
@@ -709,7 +710,7 @@ public class ReportService {
             StringBuilder excelContent = new StringBuilder();
             excelContent.append("Report Title,").append(report.getMetadata().getReportTitle()).append("\n");
             excelContent.append("Restaurant,").append(report.getMetadata().getRestaurantName()).append("\n");
-            pdfContent.append("Period,").append(report.getMetadata().getStartDate())
+            excelContent.append("Period,").append(report.getMetadata().getStartDate())
                 .append(" to ").append(report.getMetadata().getEndDate()).append("\n");
             excelContent.append("\n");
             
@@ -764,6 +765,5 @@ public class ReportService {
             log.error("Failed to export GST report to PDF", e);
             throw new RuntimeException("Failed to export GST report to PDF", e);
         }
-    }
     }
 }

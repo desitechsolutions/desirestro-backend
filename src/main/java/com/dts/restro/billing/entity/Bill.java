@@ -1,5 +1,6 @@
 package com.dts.restro.billing.entity;
 
+import com.dts.restro.billing.enums.BillStatus;
 import com.dts.restro.billing.enums.OrderType;
 import com.dts.restro.billing.enums.PaymentMethod;
 import com.dts.restro.billing.enums.TaxType;
@@ -214,7 +215,17 @@ public class Bill {
             this.changeAmount = BigDecimal.ZERO;
         }
     }
-    
+
+    /** Compatibility alias: returns billTime */
+    public LocalDateTime getBillDate() {
+        return billTime;
+    }
+
+    /** Compatibility alias: returns grandTotal */
+    public BigDecimal getFinalAmount() {
+        return grandTotal;
+    }
+
     /**
      * Cancel bill
      */
@@ -222,6 +233,17 @@ public class Bill {
         this.isCancelled = true;
         this.cancellationReason = reason;
     }
+
+    /**
+     * Get computed bill status based on isPaid / isCancelled flags
+     */
+    public BillStatus getStatus() {
+        if (Boolean.TRUE.equals(isCancelled)) return BillStatus.CANCELLED;
+        if (Boolean.TRUE.equals(isPaid)) return BillStatus.PAID;
+        return BillStatus.PENDING;
+    }
 }
+
+// Made with Bob
 
 // Made with Bob

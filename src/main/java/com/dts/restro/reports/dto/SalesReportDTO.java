@@ -182,6 +182,10 @@ public class SalesReportDTO {
         private BigDecimal difference;
         private Double growthPercentage;
         private String trend; // "UP", "DOWN", "STABLE"
+        private Double revenueGrowth;
+        private Integer previousBills;
+        private Integer currentBills;
+        private Double billGrowth;
     }
 }
 

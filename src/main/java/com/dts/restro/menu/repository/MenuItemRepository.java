@@ -21,4 +21,6 @@ public interface MenuItemRepository extends JpaRepository<MenuItem, Long> {
 
     @Query("SELECT m FROM MenuItem m JOIN FETCH m.category WHERE LOWER(m.name) LIKE LOWER(CONCAT('%', :search, '%')) AND m.available = true")
     List<MenuItem> findAvailableByNameWithCategory(@Param("search") String search);
+
+    long countByRestaurantId(Long restaurantId);
 }

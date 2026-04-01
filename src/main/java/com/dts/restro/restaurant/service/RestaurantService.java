@@ -57,7 +57,7 @@ public class RestaurantService {
                 .gstin(r.getGstin())
                 .gstRate(r.getGstRate())
                 .code(r.getCode())
-                .active(r.isActive())
+                .active(r.getActive())
                 .createdAt(r.getCreatedAt())
                 .build();
     }
