@@ -26,7 +26,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     /**
      * Find attendance by restaurant ID and date
      */
-    @Query("SELECT a FROM Attendance a WHERE a.restaurantId = :restaurantId AND a.date = :date ORDER BY a.clockIn DESC")
+    @Query("SELECT a FROM Attendance a WHERE a.restaurant.id = :restaurantId AND a.date = :date ORDER BY a.clockIn DESC")
     List<Attendance> findByRestaurantIdAndDate(@Param("restaurantId") Long restaurantId, @Param("date") LocalDate date);
     
     /**

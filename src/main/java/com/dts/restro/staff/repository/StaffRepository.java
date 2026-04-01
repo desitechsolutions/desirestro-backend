@@ -15,19 +15,13 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     /**
      * Find all staff by restaurant ID ordered by join date descending
      */
-    @Query("SELECT s FROM Staff s WHERE s.restaurantId = :restaurantId ORDER BY s.joinDate DESC")
+    @Query("SELECT s FROM Staff s WHERE s.restaurant.id = :restaurantId ORDER BY s.joinDate DESC")
     List<Staff> findAllByRestaurantIdOrderByJoinDateDesc(@Param("restaurantId") Long restaurantId);
     
-    /**
-     * Find staff by ID and restaurant ID
-     */
-    @Query("SELECT s FROM Staff s WHERE s.id = :id AND s.restaurantId = :restaurantId")
+    @Query("SELECT s FROM Staff s WHERE s.id = :id AND s.restaurant.id = :restaurantId")
     Optional<Staff> findByIdAndRestaurantId(@Param("id") Long id, @Param("restaurantId") Long restaurantId);
     
-    /**
-     * Count staff by restaurant ID
-     */
-    @Query("SELECT COUNT(s) FROM Staff s WHERE s.restaurantId = :restaurantId")
+    @Query("SELECT COUNT(s) FROM Staff s WHERE s.restaurant.id = :restaurantId")
     long countByRestaurantId(@Param("restaurantId") Long restaurantId);
     
     /**
