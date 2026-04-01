@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+
+  mysql:
+    image: mysql:8.4
+    container_name: desirestro-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-DesiRestroRoot@1234}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-desi_restro_db}
+      MYSQL_USER: ${MYSQL_USER:-desi_restro}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-DesiRestro@1234}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - desirestro-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  desirestro-backend:
+    build: .
+    container_name: desirestro-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      PORT: 8080
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-desi_restro_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-desi_restro}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-DesiRestro@1234}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+      APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:-http://localhost:3000}
+    networks:
+      - desirestro-network
+
+networks:
+  desirestro-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
