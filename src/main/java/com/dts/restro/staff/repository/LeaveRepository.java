@@ -22,7 +22,7 @@ public interface LeaveRepository extends JpaRepository<Leave, Long> {
     /**
      * Find leaves by restaurant ID and status
      */
-    @Query("SELECT l FROM Leave l WHERE l.restaurantId = :restaurantId AND l.status = :status ORDER BY l.appliedDate DESC")
+    @Query("SELECT l FROM Leave l WHERE l.restaurant.id = :restaurantId AND l.status = :status ORDER BY l.appliedDate DESC")
     List<Leave> findByRestaurantIdAndStatus(@Param("restaurantId") Long restaurantId, @Param("status") LeaveStatus status);
     
     /**
@@ -46,7 +46,7 @@ public interface LeaveRepository extends JpaRepository<Leave, Long> {
     /**
      * Find leaves by restaurant ID and date range
      */
-    @Query("SELECT l FROM Leave l WHERE l.restaurantId = :restaurantId " +
+    @Query("SELECT l FROM Leave l WHERE l.restaurant.id = :restaurantId " +
            "AND ((l.fromDate <= :endDate AND l.toDate >= :startDate)) " +
            "ORDER BY l.fromDate DESC")
     List<Leave> findByRestaurantIdAndDateRange(
@@ -58,7 +58,7 @@ public interface LeaveRepository extends JpaRepository<Leave, Long> {
     /**
      * Count pending leaves by restaurant ID
      */
-    @Query("SELECT COUNT(l) FROM Leave l WHERE l.restaurantId = :restaurantId AND l.status = 'PENDING'")
+    @Query("SELECT COUNT(l) FROM Leave l WHERE l.restaurant.id = :restaurantId AND l.status = 'PENDING'")
     long countPendingLeavesByRestaurantId(@Param("restaurantId") Long restaurantId);
     
     /**
