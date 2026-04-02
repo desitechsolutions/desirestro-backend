@@ -35,6 +35,27 @@ public class DailySalesSummary {
     @Column(name = "sales_date", nullable = false)
     private LocalDate salesDate;
 
+    // Order statistics (by order type)
+    @Column(name = "total_orders")
+    @Builder.Default
+    private Integer totalOrders = 0;
+
+    @Column(name = "dine_in_orders")
+    @Builder.Default
+    private Integer dineInOrders = 0;
+
+    @Column(name = "takeaway_orders")
+    @Builder.Default
+    private Integer takeawayOrders = 0;
+
+    @Column(name = "delivery_orders")
+    @Builder.Default
+    private Integer deliveryOrders = 0;
+
+    @Column(name = "cancelled_orders")
+    @Builder.Default
+    private Integer cancelledOrders = 0;
+
     // Bill counts
     @Column(name = "total_bills")
     @Builder.Default

@@ -1,8 +1,10 @@
 -- =====================================================
--- V8: Atomic bill-number sequence table
--- The UNIQUE KEY uk_bill_number is already defined on
--- the bill table created in V7; no need to add it here.
+-- V8: Atomic bill-number sequence table + procedure
+-- MySQL 8+ compatible.
+-- Uses Flyway per-file delimiter: END$$ terminates the
+-- CREATE PROCEDURE statement; all other DML uses $$ too.
 -- =====================================================
+-- @delimiter $$
 
 CREATE TABLE IF NOT EXISTS bill_sequence (
     id             BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -13,11 +15,35 @@ CREATE TABLE IF NOT EXISTS bill_sequence (
     updated_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uk_bill_seq_restaurant_date (restaurant_id, bill_date),
     FOREIGN KEY (restaurant_id) REFERENCES restaurant(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  COMMENT = 'Stores per-restaurant per-day bill sequence numbers to prevent race conditions'$$
 
--- NOTE: A stored procedure for atomic sequence generation was intentionally omitted.
--- Flyway does not support MySQL DELIMITER directives. Sequence logic is handled
--- in BillingService.generateBillNumber() using database row locking (SELECT FOR UPDATE).
+-- Atomic sequence generation: inserts a new row or increments the counter,
+-- then returns the new sequence value using a SELECT FOR UPDATE lock to
+-- guarantee uniqueness even under concurrent requests.
+CREATE PROCEDURE IF NOT EXISTS get_next_bill_sequence(
+    IN  p_restaurant_id BIGINT,
+    IN  p_bill_date     DATE,
+    OUT p_sequence      INT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
 
-ALTER TABLE bill_sequence
-    COMMENT = 'Stores per-restaurant per-day bill sequence numbers to prevent race conditions';
+    START TRANSACTION;
+
+    INSERT INTO bill_sequence (restaurant_id, bill_date, last_sequence)
+    VALUES (p_restaurant_id, p_bill_date, 1)
+    ON DUPLICATE KEY UPDATE last_sequence = last_sequence + 1;
+
+    SELECT last_sequence INTO p_sequence
+    FROM   bill_sequence
+    WHERE  restaurant_id = p_restaurant_id
+      AND  bill_date     = p_bill_date
+    FOR UPDATE;
+
+    COMMIT;
+END$$

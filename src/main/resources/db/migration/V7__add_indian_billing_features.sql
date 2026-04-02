@@ -173,6 +173,13 @@ CREATE TABLE daily_sales_summary (
     restaurant_id           BIGINT NOT NULL,
     sales_date              DATE NOT NULL,
 
+    -- Order statistics (by order type)
+    total_orders            INT DEFAULT 0,
+    dine_in_orders          INT DEFAULT 0,
+    takeaway_orders         INT DEFAULT 0,
+    delivery_orders         INT DEFAULT 0,
+    cancelled_orders        INT DEFAULT 0,
+
     -- Bill counts
     total_bills             INT DEFAULT 0,
     paid_bills              INT DEFAULT 0,
