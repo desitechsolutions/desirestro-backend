@@ -1,25 +1,18 @@
--- =====================================================
 -- V6: SUPER ADMIN FEATURES & AUDIT LOGGING
--- =====================================================
+-- MySQL 8+ compatible (uses ADD COLUMN IF NOT EXISTS)
+-- NOTE: restaurant_id FK on users was already added in V4; skipped here to avoid duplicate
 
--- Add active flag and timestamps to users table if not exists
-ALTER TABLE users 
-ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT TRUE,
-ADD COLUMN IF NOT EXISTS email VARCHAR(150),
-ADD COLUMN IF NOT EXISTS restaurant_id BIGINT,
-ADD COLUMN IF NOT EXISTS created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN IF NOT EXISTS updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
-
--- Add foreign key for restaurant_id
+-- Add active flag, email and timestamps to users table if not already present
 ALTER TABLE users
-ADD CONSTRAINT fk_users_restaurant
-    FOREIGN KEY (restaurant_id) REFERENCES restaurant(id)
-    ON DELETE SET NULL;
+ADD COLUMN IF NOT EXISTS active      BOOLEAN NOT NULL DEFAULT TRUE,
+ADD COLUMN IF NOT EXISTS email       VARCHAR(150),
+ADD COLUMN IF NOT EXISTS created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN IF NOT EXISTS updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
 
--- Add index for better query performance
+-- Indexes (IF NOT EXISTS avoids failures if V4 already created some)
 CREATE INDEX IF NOT EXISTS idx_users_restaurant ON users(restaurant_id);
-CREATE INDEX IF NOT EXISTS idx_users_active ON users(active);
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_active     ON users(active);
+CREATE INDEX IF NOT EXISTS idx_users_email      ON users(email);
 
 -- =====================================================
 -- AUDIT LOG TABLE
@@ -188,32 +181,8 @@ VALUES
 ON DUPLICATE KEY UPDATE setting_key=setting_key;
 
 -- =====================================================
--- CREATE TRIGGER FOR AUDIT LOGGING
--- =====================================================
-DELIMITER //
+-- NOTE: Trigger for audit logging removed; Flyway does not support DELIMITER directives.
+-- Audit logging is handled at the application layer via AuditService.
 
-CREATE TRIGGER IF NOT EXISTS audit_user_changes
-AFTER UPDATE ON users
-FOR EACH ROW
-BEGIN
-    IF OLD.active != NEW.active OR OLD.role != NEW.role THEN
-        INSERT INTO audit_log (
-            user_id, username, restaurant_id, action, entity_type, entity_id,
-            old_value, new_value, timestamp
-        ) VALUES (
-            NEW.id,
-            NEW.username,
-            NEW.restaurant_id,
-            'UPDATE',
-            'USER',
-            NEW.id,
-            JSON_OBJECT('active', OLD.active, 'role', OLD.role),
-            JSON_OBJECT('active', NEW.active, 'role', NEW.role),
-            NOW()
-        );
-    END IF;
-END//
-
-DELIMITER ;
 
 -- Made with Bob
