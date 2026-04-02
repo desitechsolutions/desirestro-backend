@@ -22,10 +22,10 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
 
-    @Value("${spring.mail.username:noreply@desirestro.com}")
+    @Value("${spring.mail.username:noreply@desitechsolutions.com}")
     private String fromAddress;
 
-    @Value("${app.name:DesiRestro}")
+    @Value("${app.mail.display-name:DesiRestro}")
     private String appName;
 
     public EmailService(JavaMailSender mailSender, TemplateEngine templateEngine) {
@@ -42,7 +42,7 @@ public class EmailService {
             ctx.setVariable("restaurantName", restaurant.getName());
             ctx.setVariable("appName", appName);
             ctx.setVariable("currentYear", LocalDateTime.now().getYear());
-            ctx.setVariable("supportEmail", "support@desirestro.com");
+            ctx.setVariable("supportEmail", "support@desitechsolutions.com");
 
             String htmlBody = templateEngine.process("reset-password-email", ctx);
 

@@ -1,94 +1,113 @@
+-- V9: Performance indexes for DesiRestro
+SET FOREIGN_KEY_CHECKS = 0;
+
 -- =====================================================
--- V9: Performance indexes
--- MySQL 8+ (uses CREATE INDEX IF NOT EXISTS)
+-- HELPER PROCEDURE: AddIndexUnlessExists
 -- =====================================================
+DROP PROCEDURE IF EXISTS AddIndexUnlessExists;
+DELIMITER //
+CREATE PROCEDURE AddIndexUnlessExists(
+    IN tableName VARCHAR(64),
+    IN indexName VARCHAR(64),
+    IN indexDefinition TEXT
+)
+BEGIN
+    IF NOT EXISTS (
+        SELECT * FROM information_schema.statistics
+        WHERE table_schema = DATABASE()
+        AND table_name = tableName
+        AND index_name = indexName
+    ) THEN
+        SET @sql = CONCAT('CREATE INDEX ', indexName, ' ON ', tableName, ' ', indexDefinition);
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END //
+DELIMITER ;
 
 -- ============================================
 -- CUSTOMER
 -- ============================================
-CREATE INDEX IF NOT EXISTS idx_customer_restaurant_phone   ON customer(restaurant_id, phone);
-CREATE INDEX IF NOT EXISTS idx_customer_restaurant_email   ON customer(restaurant_id, email);
-CREATE INDEX IF NOT EXISTS idx_customer_restaurant_gstin   ON customer(restaurant_id, gstin);
-CREATE INDEX IF NOT EXISTS idx_customer_restaurant_active  ON customer(restaurant_id, is_active);
-CREATE INDEX IF NOT EXISTS idx_customer_credit_balance     ON customer(restaurant_id, credit_balance);
-CREATE INDEX IF NOT EXISTS idx_customer_loyalty_points     ON customer(restaurant_id, loyalty_points);
+CALL AddIndexUnlessExists('customer', 'idx_customer_restaurant_phone', '(restaurant_id, phone)');
+CALL AddIndexUnlessExists('customer', 'idx_customer_restaurant_email', '(restaurant_id, email)');
+CALL AddIndexUnlessExists('customer', 'idx_customer_restaurant_gstin', '(restaurant_id, gstin)');
+CALL AddIndexUnlessExists('customer', 'idx_customer_restaurant_active', '(restaurant_id, is_active)');
+CALL AddIndexUnlessExists('customer', 'idx_customer_credit_balance', '(restaurant_id, credit_balance)');
+CALL AddIndexUnlessExists('customer', 'idx_customer_loyalty_points', '(restaurant_id, loyalty_points)');
 
 -- ============================================
--- BILL  (bill_time is the timestamp column; bill has no payment_status or kot_id)
+-- BILL
 -- ============================================
-CREATE INDEX IF NOT EXISTS idx_bill_restaurant_time        ON bill(restaurant_id, bill_time);
-CREATE INDEX IF NOT EXISTS idx_bill_restaurant_customer    ON bill(restaurant_id, customer_id);
-CREATE INDEX IF NOT EXISTS idx_bill_restaurant_paid        ON bill(restaurant_id, is_paid);
-CREATE INDEX IF NOT EXISTS idx_bill_restaurant_pay_method  ON bill(restaurant_id, payment_method);
-CREATE INDEX IF NOT EXISTS idx_bill_restaurant_tax_type    ON bill(restaurant_id, tax_type);
-CREATE INDEX IF NOT EXISTS idx_bill_date_range             ON bill(bill_time);
+CALL AddIndexUnlessExists('bill', 'idx_bill_restaurant_time', '(restaurant_id, bill_time)');
+CALL AddIndexUnlessExists('bill', 'idx_bill_restaurant_customer', '(restaurant_id, customer_id)');
+CALL AddIndexUnlessExists('bill', 'idx_bill_restaurant_paid', '(restaurant_id, is_paid)');
+CALL AddIndexUnlessExists('bill', 'idx_bill_restaurant_pay_method', '(restaurant_id, payment_method)');
+CALL AddIndexUnlessExists('bill', 'idx_bill_restaurant_tax_type', '(restaurant_id, tax_type)');
+CALL AddIndexUnlessExists('bill', 'idx_bill_date_range', '(bill_time)');
 
 -- ============================================
--- BILL_ITEM  (bill_item has no restaurant_id column)
+-- BILL_ITEM
 -- ============================================
-CREATE INDEX IF NOT EXISTS idx_bill_item_bill  ON bill_item(bill_id);
-CREATE INDEX IF NOT EXISTS idx_bill_item_menu  ON bill_item(menu_item_id);
+CALL AddIndexUnlessExists('bill_item', 'idx_bill_item_bill', '(bill_id)');
+CALL AddIndexUnlessExists('bill_item', 'idx_bill_item_menu', '(menu_item_id)');
 
 -- ============================================
--- DAILY_SALES_SUMMARY  (column is sales_date not sale_date)
+-- DAILY_SALES_SUMMARY
 -- ============================================
-CREATE INDEX IF NOT EXISTS idx_daily_sales_restaurant_date ON daily_sales_summary(restaurant_id, sales_date);
-CREATE INDEX IF NOT EXISTS idx_daily_sales_date_range      ON daily_sales_summary(sales_date);
+CALL AddIndexUnlessExists('daily_sales_summary', 'idx_daily_sales_restaurant_date', '(restaurant_id, sales_date)');
+CALL AddIndexUnlessExists('daily_sales_summary', 'idx_daily_sales_date_range', '(sales_date)');
 
 -- ============================================
 -- KOT
 -- ============================================
-CREATE INDEX IF NOT EXISTS idx_kot_restaurant_status  ON kot(restaurant_id, status);
-CREATE INDEX IF NOT EXISTS idx_kot_party              ON kot(party_id);
-CREATE INDEX IF NOT EXISTS idx_kot_restaurant_number  ON kot(restaurant_id, kot_number);
+CALL AddIndexUnlessExists('kot', 'idx_kot_restaurant_status', '(restaurant_id, status)');
+CALL AddIndexUnlessExists('kot', 'idx_kot_party', '(party_id)');
+CALL AddIndexUnlessExists('kot', 'idx_kot_restaurant_number', '(restaurant_id, kot_number)');
 
 -- ============================================
 -- MENU_ITEM
 -- ============================================
-CREATE INDEX IF NOT EXISTS idx_menu_item_restaurant_available ON menu_item(restaurant_id, available);
-CREATE INDEX IF NOT EXISTS idx_menu_item_restaurant_category  ON menu_item(restaurant_id, category_id);
-CREATE INDEX IF NOT EXISTS idx_menu_item_restaurant_veg       ON menu_item(restaurant_id, veg);
+CALL AddIndexUnlessExists('menu_item', 'idx_menu_item_restaurant_available', '(restaurant_id, available)');
+CALL AddIndexUnlessExists('menu_item', 'idx_menu_item_restaurant_category', '(restaurant_id, category_id)');
+CALL AddIndexUnlessExists('menu_item', 'idx_menu_item_restaurant_veg', '(restaurant_id, veg)');
 
 -- ============================================
--- PARTY  (FK column is table_id; no is_active — use status)
+-- PARTY
 -- ============================================
-CREATE INDEX IF NOT EXISTS idx_party_restaurant_table  ON party(restaurant_id, table_id);
-CREATE INDEX IF NOT EXISTS idx_party_restaurant_status ON party(restaurant_id, status);
+CALL AddIndexUnlessExists('party', 'idx_party_restaurant_table', '(restaurant_id, table_id)');
+CALL AddIndexUnlessExists('party', 'idx_party_restaurant_status', '(restaurant_id, status)');
 
 -- ============================================
 -- RESTAURANT_TABLE
 -- ============================================
-CREATE INDEX IF NOT EXISTS idx_table_restaurant_status ON restaurant_table(restaurant_id, status);
+CALL AddIndexUnlessExists('restaurant_table', 'idx_table_restaurant_status', '(restaurant_id, status)');
 
 -- ============================================
--- STAFF  (V2 dropped username/password/role from staff; no is_active column)
+-- STAFF
 -- ============================================
-CREATE INDEX IF NOT EXISTS idx_staff_restaurant_join_date ON staff(restaurant_id, join_date);
+CALL AddIndexUnlessExists('staff', 'idx_staff_restaurant_join_date', '(restaurant_id, join_date)');
 
 -- ============================================
--- AUDIT_LOG  (timestamp column; V6 CREATE TABLE already adds basic indexes)
+-- AUDIT_LOG
 -- ============================================
-CREATE INDEX IF NOT EXISTS idx_audit_restaurant_ts  ON audit_log(restaurant_id, timestamp);
-CREATE INDEX IF NOT EXISTS idx_audit_entity         ON audit_log(entity_type, entity_id);
-CREATE INDEX IF NOT EXISTS idx_audit_user_ts        ON audit_log(user_id, timestamp);
-CREATE INDEX IF NOT EXISTS idx_audit_action_ts      ON audit_log(action, timestamp);
+CALL AddIndexUnlessExists('audit_log', 'idx_audit_restaurant_ts', '(restaurant_id, timestamp)');
+CALL AddIndexUnlessExists('audit_log', 'idx_audit_entity_new', '(entity_type, entity_id)');
+CALL AddIndexUnlessExists('audit_log', 'idx_audit_user_ts', '(user_id, timestamp)');
+CALL AddIndexUnlessExists('audit_log', 'idx_audit_action_ts', '(action, timestamp)');
 
 -- ============================================
--- ANALYZE for query optimizer statistics
+-- ANALYZE & COMMENTS
 -- ============================================
-ANALYZE TABLE customer;
-ANALYZE TABLE bill;
-ANALYZE TABLE bill_item;
-ANALYZE TABLE daily_sales_summary;
-ANALYZE TABLE kot;
-ANALYZE TABLE menu_item;
-ANALYZE TABLE party;
-ANALYZE TABLE restaurant_table;
-ANALYZE TABLE staff;
-ANALYZE TABLE audit_log;
+ANALYZE TABLE customer, bill, bill_item, daily_sales_summary, kot, menu_item, party, restaurant_table, staff, audit_log;
 
--- Table comments
 ALTER TABLE customer           COMMENT = 'Customer master with indexes for fast search and filtering';
 ALTER TABLE bill               COMMENT = 'Bill transactions optimised for date-range and analytics queries';
 ALTER TABLE bill_item          COMMENT = 'Bill line items with indexes for sales analytics';
 ALTER TABLE daily_sales_summary COMMENT = 'Pre-aggregated daily sales data with date-based indexes';
+
+-- ============================================
+-- CLEANUP
+-- ============================================
+DROP PROCEDURE IF EXISTS AddIndexUnlessExists;
+SET FOREIGN_KEY_CHECKS = 1;

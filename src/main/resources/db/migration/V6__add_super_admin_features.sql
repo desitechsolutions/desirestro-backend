@@ -1,18 +1,43 @@
 -- V6: SUPER ADMIN FEATURES & AUDIT LOGGING
--- MySQL 8+ compatible (uses ADD COLUMN IF NOT EXISTS)
--- NOTE: restaurant_id FK on users was already added in V4; skipped here to avoid duplicate
+SET FOREIGN_KEY_CHECKS = 0;
 
--- Add active flag, email and timestamps to users table if not already present
-ALTER TABLE users
-ADD COLUMN IF NOT EXISTS active      BOOLEAN NOT NULL DEFAULT TRUE,
-ADD COLUMN IF NOT EXISTS email       VARCHAR(150),
-ADD COLUMN IF NOT EXISTS created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN IF NOT EXISTS updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+-- =====================================================
+-- HELPER PROCEDURES (With Correct Delimiters)
+-- =====================================================
+DROP PROCEDURE IF EXISTS AddColumnUnlessExists;
+DELIMITER //
+CREATE PROCEDURE AddColumnUnlessExists(IN tableName VARCHAR(64), IN columnName VARCHAR(64), IN columnDefinition TEXT)
+BEGIN
+    IF NOT EXISTS (SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = tableName AND COLUMN_NAME = columnName) THEN
+        SET @sql = CONCAT('ALTER TABLE ', tableName, ' ADD COLUMN ', columnName, ' ', columnDefinition);
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END IF;
+END //
+DELIMITER ;
 
--- Indexes (IF NOT EXISTS avoids failures if V4 already created some)
-CREATE INDEX IF NOT EXISTS idx_users_restaurant ON users(restaurant_id);
-CREATE INDEX IF NOT EXISTS idx_users_active     ON users(active);
-CREATE INDEX IF NOT EXISTS idx_users_email      ON users(email);
+DROP PROCEDURE IF EXISTS AddIndexUnlessExists;
+DELIMITER //
+CREATE PROCEDURE AddIndexUnlessExists(IN tableName VARCHAR(64), IN indexName VARCHAR(64), IN indexDefinition TEXT)
+BEGIN
+    IF NOT EXISTS (SELECT * FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = tableName AND index_name = indexName) THEN
+        SET @sql = CONCAT('CREATE INDEX ', indexName, ' ON ', tableName, ' ', indexDefinition);
+        PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    END IF;
+END //
+DELIMITER ;
+
+-- =====================================================
+-- USERS TABLE UPDATES
+-- =====================================================
+CALL AddColumnUnlessExists('users', 'active', 'BOOLEAN NOT NULL DEFAULT TRUE');
+CALL AddColumnUnlessExists('users', 'email', 'VARCHAR(150)');
+CALL AddColumnUnlessExists('users', 'created_at', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP');
+CALL AddColumnUnlessExists('users', 'updated_at', 'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+
+-- Safe Index Creation
+CALL AddIndexUnlessExists('users', 'idx_users_restaurant', '(restaurant_id)');
+CALL AddIndexUnlessExists('users', 'idx_users_active', '(active)');
+CALL AddIndexUnlessExists('users', 'idx_users_email', '(email)');
 
 -- =====================================================
 -- AUDIT LOG TABLE
@@ -30,23 +55,17 @@ CREATE TABLE IF NOT EXISTS audit_log (
     ip_address VARCHAR(45),
     user_agent VARCHAR(500),
     timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     INDEX idx_audit_user (user_id),
     INDEX idx_audit_restaurant (restaurant_id),
     INDEX idx_audit_timestamp (timestamp),
     INDEX idx_audit_action (action),
     INDEX idx_audit_entity (entity_type, entity_id),
-    
-    CONSTRAINT fk_audit_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE SET NULL,
-    CONSTRAINT fk_audit_restaurant
-        FOREIGN KEY (restaurant_id) REFERENCES restaurant(id)
-        ON DELETE SET NULL
+    CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_audit_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurant(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================
--- SUPPORT TICKET TABLE
+-- SUPPORT TICKET TABLES
 -- =====================================================
 CREATE TABLE IF NOT EXISTS support_ticket (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -62,28 +81,13 @@ CREATE TABLE IF NOT EXISTS support_ticket (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     resolved_at DATETIME,
-    
     INDEX idx_ticket_restaurant (restaurant_id),
-    INDEX idx_ticket_created_by (created_by_user_id),
-    INDEX idx_ticket_assigned_to (assigned_to_user_id),
     INDEX idx_ticket_status (status),
-    INDEX idx_ticket_priority (priority),
-    INDEX idx_ticket_created_at (created_at),
-    
-    CONSTRAINT fk_ticket_restaurant
-        FOREIGN KEY (restaurant_id) REFERENCES restaurant(id)
-        ON DELETE CASCADE,
-    CONSTRAINT fk_ticket_created_by
-        FOREIGN KEY (created_by_user_id) REFERENCES users(id)
-        ON DELETE CASCADE,
-    CONSTRAINT fk_ticket_assigned_to
-        FOREIGN KEY (assigned_to_user_id) REFERENCES users(id)
-        ON DELETE SET NULL
+    CONSTRAINT fk_ticket_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurant(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ticket_created_by FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ticket_assigned_to FOREIGN KEY (assigned_to_user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- =====================================================
--- SUPPORT TICKET COMMENT TABLE
--- =====================================================
 CREATE TABLE IF NOT EXISTS support_ticket_comment (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     ticket_id BIGINT NOT NULL,
@@ -91,21 +95,13 @@ CREATE TABLE IF NOT EXISTS support_ticket_comment (
     comment TEXT NOT NULL,
     is_internal BOOLEAN DEFAULT FALSE,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     INDEX idx_comment_ticket (ticket_id),
-    INDEX idx_comment_user (user_id),
-    INDEX idx_comment_created_at (created_at),
-    
-    CONSTRAINT fk_comment_ticket
-        FOREIGN KEY (ticket_id) REFERENCES support_ticket(id)
-        ON DELETE CASCADE,
-    CONSTRAINT fk_comment_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE CASCADE
+    CONSTRAINT fk_comment_ticket FOREIGN KEY (ticket_id) REFERENCES support_ticket(id) ON DELETE CASCADE,
+    CONSTRAINT fk_comment_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================
--- SYSTEM SETTINGS TABLE
+-- SYSTEM SETTINGS & SUBSCRIPTIONS
 -- =====================================================
 CREATE TABLE IF NOT EXISTS system_settings (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -116,18 +112,9 @@ CREATE TABLE IF NOT EXISTS system_settings (
     is_public BOOLEAN DEFAULT FALSE,
     updated_by_user_id BIGINT,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    INDEX idx_settings_category (category),
-    INDEX idx_settings_public (is_public),
-    
-    CONSTRAINT fk_settings_updated_by
-        FOREIGN KEY (updated_by_user_id) REFERENCES users(id)
-        ON DELETE SET NULL
+    CONSTRAINT fk_settings_updated_by FOREIGN KEY (updated_by_user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- =====================================================
--- RESTAURANT SUBSCRIPTION TABLE
--- =====================================================
 CREATE TABLE IF NOT EXISTS restaurant_subscription (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     restaurant_id BIGINT NOT NULL UNIQUE,
@@ -140,49 +127,25 @@ CREATE TABLE IF NOT EXISTS restaurant_subscription (
     features JSON,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    INDEX idx_subscription_restaurant (restaurant_id),
-    INDEX idx_subscription_status (status),
-    INDEX idx_subscription_end_date (end_date),
-    
-    CONSTRAINT fk_subscription_restaurant
-        FOREIGN KEY (restaurant_id) REFERENCES restaurant(id)
-        ON DELETE CASCADE
+    CONSTRAINT fk_subscription_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurant(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================
--- INSERT DEFAULT SUPER ADMIN USER
+-- DEFAULT DATA
 -- =====================================================
--- Password: SuperAdmin@123 (BCrypt encoded)
-INSERT INTO users (username, password, role, full_name, email, active, restaurant_id)
-VALUES (
-    'superadmin',
-    '$2a$10$xQKhF5xQKhF5xQKhF5xQKuO8YvZ5xQKhF5xQKhF5xQKhF5xQKhF5x',
-    'SUPER_ADMIN',
-    'System Administrator',
-    'admin@desirestro.com',
-    TRUE,
-    NULL
-)
-ON DUPLICATE KEY UPDATE username=username;
+INSERT IGNORE INTO users (username, password, role, full_name, email, active, restaurant_id)
+VALUES ('superadmin', '$2a$10$xQKhF5xQKhF5xQKhF5xQKuO8YvZ5xQKhF5xQKhF5xQKhF5xQKhF5x', 'SUPER_ADMIN', 'System Administrator', 'admin@desirestro.com', TRUE, NULL);
 
--- =====================================================
--- INSERT DEFAULT SYSTEM SETTINGS
--- =====================================================
 INSERT INTO system_settings (setting_key, setting_value, description, category, is_public)
 VALUES
     ('app.name', 'DesiRestro', 'Application name', 'GENERAL', TRUE),
     ('app.version', '1.0.0', 'Application version', 'GENERAL', TRUE),
-    ('support.email', 'support@desirestro.com', 'Support email address', 'SUPPORT', TRUE),
-    ('support.phone', '+91-1234567890', 'Support phone number', 'SUPPORT', TRUE),
-    ('trial.duration.days', '30', 'Trial period duration in days', 'SUBSCRIPTION', FALSE),
-    ('max.login.attempts', '5', 'Maximum login attempts before lockout', 'SECURITY', FALSE),
-    ('session.timeout.minutes', '60', 'Session timeout in minutes', 'SECURITY', FALSE)
-ON DUPLICATE KEY UPDATE setting_key=setting_key;
+    ('support.email', 'support@desirestro.com', 'Support email address', 'SUPPORT', TRUE)
+ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
 
 -- =====================================================
--- NOTE: Trigger for audit logging removed; Flyway does not support DELIMITER directives.
--- Audit logging is handled at the application layer via AuditService.
-
-
--- Made with Bob
+-- CLEANUP
+-- =====================================================
+DROP PROCEDURE IF EXISTS AddColumnUnlessExists;
+DROP PROCEDURE IF EXISTS AddIndexUnlessExists;
+SET FOREIGN_KEY_CHECKS = 1;
