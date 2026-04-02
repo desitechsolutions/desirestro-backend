@@ -69,6 +69,11 @@ public class DailySalesSummaryDTO {
     private String createdAt;
     private String updatedAt;
     
+    /** Compatibility alias: returns salesDate */
+    public LocalDate getDate() {
+        return salesDate;
+    }
+
     /**
      * Calculate total tax amount from individual tax components
      */

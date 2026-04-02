@@ -16,148 +16,171 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "daily_sales_summary", indexes = {
-    @Index(name = "idx_daily_sales", columnList = "restaurant_id, sale_date"),
-    @Index(name = "idx_sale_date", columnList = "sale_date")
+    @Index(name = "idx_daily_sales", columnList = "restaurant_id, sales_date"),
+    @Index(name = "idx_sale_date", columnList = "sales_date")
 })
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class DailySalesSummary {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(name = "restaurant_id", nullable = false)
     private Long restaurantId;
-    
-    @Column(name = "sale_date", nullable = false)
-    private LocalDate saleDate;
-    
-    // Order statistics
+
+    @Column(name = "sales_date", nullable = false)
+    private LocalDate salesDate;
+
+    // Order statistics (by order type)
     @Column(name = "total_orders")
     @Builder.Default
     private Integer totalOrders = 0;
-    
+
     @Column(name = "dine_in_orders")
     @Builder.Default
     private Integer dineInOrders = 0;
-    
+
     @Column(name = "takeaway_orders")
     @Builder.Default
     private Integer takeawayOrders = 0;
-    
+
     @Column(name = "delivery_orders")
     @Builder.Default
     private Integer deliveryOrders = 0;
-    
+
     @Column(name = "cancelled_orders")
     @Builder.Default
     private Integer cancelledOrders = 0;
-    
+
+    // Bill counts
+    @Column(name = "total_bills")
+    @Builder.Default
+    private Integer totalBills = 0;
+
+    @Column(name = "paid_bills")
+    @Builder.Default
+    private Integer paidBills = 0;
+
+    @Column(name = "pending_bills")
+    @Builder.Default
+    private Integer pendingBills = 0;
+
+    @Column(name = "cancelled_bills")
+    @Builder.Default
+    private Integer cancelledBills = 0;
+
     // Revenue breakdown
-    @Column(name = "gross_sales", precision = 10, scale = 2)
+    @Column(name = "total_revenue", precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal grossSales = BigDecimal.ZERO;
-    
-    @Column(name = "total_discount", precision = 10, scale = 2)
+    private BigDecimal totalRevenue = BigDecimal.ZERO;
+
+    @Column(name = "subtotal_amount", precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal totalDiscount = BigDecimal.ZERO;
-    
-    @Column(name = "net_sales", precision = 10, scale = 2)
+    private BigDecimal subtotalAmount = BigDecimal.ZERO;
+
+    @Column(name = "discount_amount", precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal netSales = BigDecimal.ZERO;
-    
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    @Column(name = "service_charge_amount", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal serviceChargeAmount = BigDecimal.ZERO;
+
+    @Column(name = "packaging_charge_amount", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal packagingChargeAmount = BigDecimal.ZERO;
+
+    @Column(name = "delivery_charge_amount", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal deliveryChargeAmount = BigDecimal.ZERO;
+
+    @Column(name = "round_off_amount", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal roundOffAmount = BigDecimal.ZERO;
+
+    @Column(name = "pending_amount", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal pendingAmount = BigDecimal.ZERO;
+
     // Tax breakdown
-    @Column(name = "total_cgst", precision = 10, scale = 2)
+    @Column(name = "cgst_amount", precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal totalCgst = BigDecimal.ZERO;
-    
-    @Column(name = "total_sgst", precision = 10, scale = 2)
+    private BigDecimal cgstAmount = BigDecimal.ZERO;
+
+    @Column(name = "sgst_amount", precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal totalSgst = BigDecimal.ZERO;
-    
-    @Column(name = "total_igst", precision = 10, scale = 2)
+    private BigDecimal sgstAmount = BigDecimal.ZERO;
+
+    @Column(name = "igst_amount", precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal totalIgst = BigDecimal.ZERO;
-    
-    @Column(name = "total_tax", precision = 10, scale = 2)
+    private BigDecimal igstAmount = BigDecimal.ZERO;
+
+    @Column(name = "total_tax_amount", precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal totalTax = BigDecimal.ZERO;
-    
-    // Additional charges
-    @Column(name = "total_service_charge", precision = 10, scale = 2)
-    @Builder.Default
-    private BigDecimal totalServiceCharge = BigDecimal.ZERO;
-    
-    @Column(name = "total_packaging_charges", precision = 10, scale = 2)
-    @Builder.Default
-    private BigDecimal totalPackagingCharges = BigDecimal.ZERO;
-    
-    @Column(name = "total_delivery_charges", precision = 10, scale = 2)
-    @Builder.Default
-    private BigDecimal totalDeliveryCharges = BigDecimal.ZERO;
-    
+    private BigDecimal totalTaxAmount = BigDecimal.ZERO;
+
     // Payment method breakdown
-    @Column(name = "cash_sales", precision = 10, scale = 2)
+    @Column(name = "cash_amount", precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal cashSales = BigDecimal.ZERO;
-    
-    @Column(name = "upi_sales", precision = 10, scale = 2)
+    private BigDecimal cashAmount = BigDecimal.ZERO;
+
+    @Column(name = "card_amount", precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal upiSales = BigDecimal.ZERO;
-    
-    @Column(name = "card_sales", precision = 10, scale = 2)
+    private BigDecimal cardAmount = BigDecimal.ZERO;
+
+    @Column(name = "upi_amount", precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal cardSales = BigDecimal.ZERO;
-    
-    @Column(name = "wallet_sales", precision = 10, scale = 2)
+    private BigDecimal upiAmount = BigDecimal.ZERO;
+
+    @Column(name = "net_banking_amount", precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal walletSales = BigDecimal.ZERO;
-    
-    @Column(name = "credit_sales", precision = 10, scale = 2)
+    private BigDecimal netBankingAmount = BigDecimal.ZERO;
+
+    @Column(name = "credit_amount", precision = 10, scale = 2)
     @Builder.Default
-    private BigDecimal creditSales = BigDecimal.ZERO;
-    
-    @Column(name = "online_sales", precision = 10, scale = 2)
+    private BigDecimal creditAmount = BigDecimal.ZERO;
+
+    // Customer metrics
+    @Column(name = "unique_customers")
     @Builder.Default
-    private BigDecimal onlineSales = BigDecimal.ZERO;
-    
+    private Integer uniqueCustomers = 0;
+
+    @Column(name = "new_customers")
+    @Builder.Default
+    private Integer newCustomers = 0;
+
+    @Column(name = "average_bill_value", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal averageBillValue = BigDecimal.ZERO;
+
+    // Item metrics
+    @Column(name = "total_items_sold")
+    @Builder.Default
+    private Integer totalItemsSold = 0;
+
+    @Column(name = "unique_items_sold")
+    @Builder.Default
+    private Integer uniqueItemsSold = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-    
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
-    
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-    
-    /**
-     * Calculate net sales from gross sales and discount
-     */
-    public void calculateNetSales() {
-        if (grossSales != null && totalDiscount != null) {
-            netSales = grossSales.subtract(totalDiscount);
-        }
-    }
-    
-    /**
-     * Calculate total tax from CGST, SGST, and IGST
-     */
-    public void calculateTotalTax() {
-        totalTax = BigDecimal.ZERO;
-        if (totalCgst != null) totalTax = totalTax.add(totalCgst);
-        if (totalSgst != null) totalTax = totalTax.add(totalSgst);
-        if (totalIgst != null) totalTax = totalTax.add(totalIgst);
     }
 }
 

@@ -118,6 +118,13 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
      * Check if GSTIN exists for restaurant
      */
     boolean existsByRestaurantIdAndGstin(Long restaurantId, String gstin);
+
+    /**
+     * Count new customers registered between two timestamps
+     */
+    long countByRestaurantIdAndCreatedAtBetween(Long restaurantId,
+                                                java.time.LocalDateTime start,
+                                                java.time.LocalDateTime end);
 }
 
 // Made with Bob

@@ -31,7 +31,7 @@ public class RestaurantController {
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     @Operation(summary = "Get current restaurant profile")
     public ResponseEntity<ApiResponse<RestaurantResponse>> getRestaurant() {
-        return ResponseEntity.ok(ApiResponse.success("Restaurant fetched", restaurantService.getCurrentRestaurant()));
+        return ResponseEntity.ok(ApiResponse.success(restaurantService.getCurrentRestaurant(), "Restaurant fetched"));
     }
 
     @PutMapping
@@ -39,7 +39,7 @@ public class RestaurantController {
     @Operation(summary = "Update restaurant profile")
     public ResponseEntity<ApiResponse<RestaurantResponse>> updateRestaurant(
             @Valid @RequestBody RestaurantUpdateRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("Restaurant updated",
-                restaurantService.updateCurrentRestaurant(request)));
+        return ResponseEntity.ok(ApiResponse.success(
+                restaurantService.updateCurrentRestaurant(request), "Restaurant updated"));
     }
 }

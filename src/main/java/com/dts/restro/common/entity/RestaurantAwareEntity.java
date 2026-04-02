@@ -29,4 +29,14 @@ public abstract class RestaurantAwareEntity extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
+
+    /** Convenience getter — returns the restaurant's primary key, or null if restaurant is not loaded. */
+    public Long getRestaurantId() {
+        return restaurant != null ? restaurant.getId() : null;
+    }
+
+    /** Convenience setter — intentionally no-op; the restaurant association is managed by RestaurantEntityListener. */
+    public void setRestaurantId(Long restaurantId) {
+        // no-op: restaurant is set automatically via RestaurantEntityListener from TenantContext
+    }
 }

@@ -82,4 +82,9 @@ public class Restaurant {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    /** Compatibility alias — returns {@code state} as the state code. */
+    public String getStateCode() {
+        return state;
+    }
 }

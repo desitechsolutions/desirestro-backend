@@ -50,28 +50,27 @@ public class BillingService {
      */
     @Transactional
     public EnhancedBillDTO generateBill(Long restaurantId, CreateBillRequest request) {
-        log.info("Generating bill for restaurant: {}, KOT: {}", restaurantId, request.getKotId());
+        log.info("Generating bill for restaurant: {}, Order: {}", restaurantId, request.getOrderId());
 
         // Validate restaurant ownership of KOT
-        KOT kot = kotRepository.findById(request.getKotId())
+        KOT kot = kotRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("KOT not found"));
 
-        if (!kot.getRestaurantId().equals(restaurantId)) {
+        if (!kot.getRestaurant().getId().equals(restaurantId)) {
             throw new BusinessValidationException("KOT does not belong to this restaurant");
         }
 
         // Create bill
         Bill bill = new Bill();
         bill.setRestaurantId(restaurantId);
-        bill.setKotId(kot.getId());
-        bill.setKotNumber(kot.getKotNumber());
+        bill.setOrderId(kot.getId());
         bill.setBillNumber(generateBillNumber(restaurantId));
-        bill.setBillDate(LocalDateTime.now());
-        bill.setTableNumber(kot.getParty() != null ? kot.getParty().getTableNumber() : null);
+        bill.setBillTime(LocalDateTime.now());
+        bill.setTableNumber(kot.getParty() != null && kot.getParty().getTable() != null
+                ? parseTableNumber(kot.getParty().getTable().getTableNumber()) : null);
         bill.setCustomerId(request.getCustomerId());
         bill.setTaxType(request.getTaxType());
         bill.setPaymentMethod(request.getPaymentMethod());
-        bill.setPaymentStatus("UNPAID");
 
         // Create bill items from KOT items
         List<BillItem> billItems = createBillItems(bill, kot.getItems());
@@ -97,6 +96,16 @@ public class BillingService {
         return toBillDTO(savedBill, billItems);
     }
 
+    private Integer parseTableNumber(String tableNumber) {
+        if (tableNumber == null || tableNumber.isBlank()) return null;
+        try {
+            return Integer.parseInt(tableNumber.trim());
+        } catch (NumberFormatException e) {
+            log.warn("Non-numeric table number '{}'; storing null", tableNumber);
+            return null;
+        }
+    }
+
     /**
      * Create bill items from KOT items
      */
@@ -107,12 +116,12 @@ public class BillingService {
                     billItem.setMenuItemId(kotItem.getMenuItemId());
                     billItem.setItemName(kotItem.getMenuItemName());
                     billItem.setQuantity(kotItem.getQuantity());
-                    billItem.setPrice(BigDecimal.valueOf(kotItem.getPrice()));
+                    billItem.setUnitPrice(BigDecimal.valueOf(kotItem.getPrice()));
                     billItem.setSpiceLevel(kotItem.getSpiceLevel());
                     billItem.setSpecialInstructions(kotItem.getSpecialInstructions());
                     billItem.setIsJain(kotItem.getIsJain());
                     billItem.setHsnCode(kotItem.getHsnCode());
-                    billItem.calculateItemTotal();
+                    billItem.calculateTotal();
                     return billItem;
                 })
                 .collect(Collectors.toList());
@@ -134,7 +143,7 @@ public class BillingService {
                 : BigDecimal.ZERO;
         BigDecimal serviceCharge = subtotal.multiply(serviceChargeRate)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-        bill.setServiceCharge(serviceCharge);
+        bill.setServiceChargeAmount(serviceCharge);
 
         // Add packaging and delivery charges
         BigDecimal packagingCharges = request.getPackagingCharges() != null 
@@ -197,12 +206,12 @@ public class BillingService {
 
         // Calculate total amount
         BigDecimal totalAmount = taxableAmount.add(totalTax);
-        bill.setTotalAmount(totalAmount);
+        bill.setTotalBeforeRoundOff(totalAmount);
 
         // Calculate round-off (to nearest rupee)
         BigDecimal roundedTotal = totalAmount.setScale(0, RoundingMode.HALF_UP);
         BigDecimal roundOff = roundedTotal.subtract(totalAmount);
-        bill.setRoundOff(roundOff);
+        bill.setRoundOffAmount(roundOff);
 
         // Set grand total
         BigDecimal grandTotal = totalAmount.add(roundOff);
@@ -234,7 +243,8 @@ public class BillingService {
      * Process payment for a bill
      */
     @Transactional
-    public EnhancedBillDTO processPayment(Long restaurantId, Long billId, PaymentMethod paymentMethod) {
+    public EnhancedBillDTO processPayment(Long restaurantId, Long billId, PaymentMethod paymentMethod,
+                                          BigDecimal amount, String reference) {
         log.info("Processing payment for bill: {}, method: {}", billId, paymentMethod);
 
         Bill bill = billRepository.findById(billId)
@@ -244,11 +254,11 @@ public class BillingService {
             throw new BusinessValidationException("Bill does not belong to this restaurant");
         }
 
-        if ("PAID".equals(bill.getPaymentStatus())) {
+        if (Boolean.TRUE.equals(bill.getIsPaid())) {
             throw new BusinessValidationException("Bill is already paid");
         }
 
-        bill.markAsPaid(paymentMethod);
+        bill.markAsPaid(paymentMethod, amount, reference);
         Bill savedBill = billRepository.save(bill);
 
         // Update customer statistics if customer is linked
@@ -265,15 +275,15 @@ public class BillingService {
         }
 
         log.info("Payment processed successfully for bill: {}", bill.getBillNumber());
-        
+
         // Audit log
         try {
             auditService.logBillPayment(restaurantId, savedBill.getId(),
-                savedBill.getBillNumber(), paymentMethod.toString(), savedBill.getFinalAmount());
+                savedBill.getBillNumber(), paymentMethod.toString(), savedBill.getGrandTotal());
         } catch (Exception e) {
             log.error("Failed to log bill payment audit", e);
         }
-        
+
         return toBillDTO(savedBill, billItemRepository.findByBillId(savedBill.getId()));
     }
 
@@ -317,7 +327,7 @@ public class BillingService {
             throw new BusinessValidationException("Bill does not belong to this restaurant");
         }
 
-        if ("CANCELLED".equals(bill.getPaymentStatus())) {
+        if (Boolean.TRUE.equals(bill.getIsCancelled())) {
             throw new BusinessValidationException("Bill is already cancelled");
         }
 
@@ -497,12 +507,11 @@ public class BillingService {
      */
     private EnhancedBillDTO toBillDTO(Bill bill, List<BillItem> items) {
         EnhancedBillDTO dto = new EnhancedBillDTO();
-        dto.setId(bill.getId());
+        dto.setBillId(bill.getId());
         dto.setRestaurantId(bill.getRestaurantId());
         dto.setBillNumber(bill.getBillNumber());
-        dto.setBillDate(bill.getBillDate());
-        dto.setKotId(bill.getKotId());
-        dto.setKotNumber(bill.getKotNumber());
+        dto.setBillTime(bill.getBillTime());
+        dto.setOrderId(bill.getOrderId());
         dto.setTableNumber(bill.getTableNumber());
         dto.setCustomerId(bill.getCustomerId());
         dto.setSubtotal(bill.getSubtotal());
@@ -514,25 +523,38 @@ public class BillingService {
         dto.setIgstRate(bill.getIgstRate());
         dto.setIgstAmount(bill.getIgstAmount());
         dto.setTotalTax(bill.getTotalTax());
-        dto.setServiceCharge(bill.getServiceCharge());
+        dto.setServiceChargeAmount(bill.getServiceChargeAmount());
         dto.setPackagingCharges(bill.getPackagingCharges());
         dto.setDeliveryCharges(bill.getDeliveryCharges());
         dto.setDiscountRate(bill.getDiscountRate());
         dto.setDiscountAmount(bill.getDiscountAmount());
-        dto.setRoundOff(bill.getRoundOff());
-        dto.setTotalAmount(bill.getTotalAmount());
+        dto.setRoundOffAmount(bill.getRoundOffAmount());
+        dto.setTotalBeforeRoundOff(bill.getTotalBeforeRoundOff());
         dto.setGrandTotal(bill.getGrandTotal());
         dto.setPaymentMethod(bill.getPaymentMethod());
-        dto.setPaymentStatus(bill.getPaymentStatus());
-        dto.setPaidAt(bill.getPaidAt());
-        dto.setCancelledAt(bill.getCancelledAt());
+        dto.setIsPaid(bill.getIsPaid());
+        dto.setIsCancelled(bill.getIsCancelled());
         dto.setCancellationReason(bill.getCancellationReason());
-        dto.setCreatedAt(bill.getCreatedAt());
-        dto.setUpdatedAt(bill.getUpdatedAt());
-        
-        // Set items
-        dto.setItems(items);
-        
+
+        // Convert BillItem entities to BillItemDTOs
+        List<EnhancedBillDTO.BillItemDTO> billItemDTOs = items.stream()
+                .map(item -> EnhancedBillDTO.BillItemDTO.builder()
+                        .itemId(item.getId())
+                        .itemName(item.getItemName())
+                        .itemCode(item.getItemCode())
+                        .category(item.getCategory())
+                        .quantity(item.getQuantity())
+                        .unitPrice(item.getUnitPrice())
+                        .itemTotal(item.getItemTotal())
+                        .spiceLevel(item.getSpiceLevel())
+                        .specialInstructions(item.getSpecialInstructions())
+                        .isVeg(item.getIsVeg())
+                        .isJain(item.getIsJain())
+                        .hsnCode(item.getHsnCode())
+                        .build())
+                .collect(Collectors.toList());
+        dto.setItems(billItemDTOs);
+
         return dto;
     }
 }
