@@ -56,7 +56,7 @@ public class StaffService {
      * Create new staff member
      */
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public StaffDTO createStaff(StaffDTO dto) {
         log.info("Creating staff member: {}", dto.getUsername());
         
@@ -146,7 +146,7 @@ public class StaffService {
      * Update staff member
      */
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public StaffDTO updateStaff(Long id, StaffDTO dto) {
         log.info("Updating staff member: {}", id);
         
@@ -197,7 +197,7 @@ public class StaffService {
      * Delete staff member
      */
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public void deleteStaff(Long id) {
         log.info("Deleting staff member: {}", id);
         
@@ -347,7 +347,7 @@ public class StaffService {
      * Approve leave request
      */
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public LeaveDTO approveLeave(Long leaveId) {
         log.info("Approving leave: {}", leaveId);
         
@@ -381,7 +381,7 @@ public class StaffService {
      * Reject leave request
      */
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public LeaveDTO rejectLeave(Long leaveId) {
         log.info("Rejecting leave: {}", leaveId);
         

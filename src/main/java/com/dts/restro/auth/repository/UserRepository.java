@@ -15,17 +15,23 @@ import java.util.Optional;
  */
 @SkipRestaurantFilter
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByUsername(String username);
+
+    // Optimized with FETCH JOIN to prevent LazyInitializationException during login
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.restaurant WHERE u.username = :username")
+    Optional<User> findByUsername(@Param("username") String username);
+
     Boolean existsByUsername(String username);
 
-    @Query("SELECT u FROM User u WHERE u.username = :usernameOrEmail OR u.email = :usernameOrEmail")
+    // Optimized for login/forgot-password flows that check both fields
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.restaurant " +
+            "WHERE u.username = :usernameOrEmail OR u.email = :usernameOrEmail")
     Optional<User> findByUsernameOrEmail(@Param("usernameOrEmail") String usernameOrEmail);
-    
+
     List<User> findByRestaurantId(Long restaurantId);
-    
+
     long countByActiveTrue();
-    
+
     long countByRestaurantId(Long restaurantId);
-    
+
     long countByRestaurantIdAndActiveTrue(Long restaurantId);
 }

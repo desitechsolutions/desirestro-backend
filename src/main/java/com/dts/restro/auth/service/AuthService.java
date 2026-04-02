@@ -79,6 +79,7 @@ public class AuthService {
                     .state(request.getRestaurantState())
                     .gstin(request.getGstin())
                     .code(code)
+                    .active(true)
                     .build();
 
             restaurant = restaurantRepository.save(restaurant);
