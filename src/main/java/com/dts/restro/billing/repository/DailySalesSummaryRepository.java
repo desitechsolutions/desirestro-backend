@@ -20,76 +20,76 @@ public interface DailySalesSummaryRepository extends JpaRepository<DailySalesSum
     /**
      * Find summary by restaurant and date
      */
-    Optional<DailySalesSummary> findByRestaurantIdAndSaleDate(Long restaurantId, LocalDate saleDate);
-    
+    Optional<DailySalesSummary> findByRestaurantIdAndSalesDate(Long restaurantId, LocalDate salesDate);
+
     /**
      * Find summaries for a date range
      */
-    List<DailySalesSummary> findByRestaurantIdAndSaleDateBetweenOrderBySaleDateDesc(
+    List<DailySalesSummary> findByRestaurantIdAndSalesDateBetween(
             Long restaurantId, LocalDate startDate, LocalDate endDate);
-    
+
     /**
      * Get total sales for a date range
      */
-    @Query("SELECT COALESCE(SUM(d.netSales), 0) FROM DailySalesSummary d " +
+    @Query("SELECT COALESCE(SUM(d.totalRevenue), 0) FROM DailySalesSummary d " +
            "WHERE d.restaurantId = :restaurantId " +
-           "AND d.saleDate BETWEEN :startDate AND :endDate")
+           "AND d.salesDate BETWEEN :startDate AND :endDate")
     BigDecimal getTotalSales(@Param("restaurantId") Long restaurantId,
                             @Param("startDate") LocalDate startDate,
                             @Param("endDate") LocalDate endDate);
-    
+
     /**
      * Get total tax for a date range
      */
-    @Query("SELECT COALESCE(SUM(d.totalTax), 0) FROM DailySalesSummary d " +
+    @Query("SELECT COALESCE(SUM(d.totalTaxAmount), 0) FROM DailySalesSummary d " +
            "WHERE d.restaurantId = :restaurantId " +
-           "AND d.saleDate BETWEEN :startDate AND :endDate")
+           "AND d.salesDate BETWEEN :startDate AND :endDate")
     BigDecimal getTotalTax(@Param("restaurantId") Long restaurantId,
                           @Param("startDate") LocalDate startDate,
                           @Param("endDate") LocalDate endDate);
-    
+
     /**
-     * Get total orders for a date range
+     * Get total bills for a date range
      */
-    @Query("SELECT COALESCE(SUM(d.totalOrders), 0) FROM DailySalesSummary d " +
+    @Query("SELECT COALESCE(SUM(d.totalBills), 0) FROM DailySalesSummary d " +
            "WHERE d.restaurantId = :restaurantId " +
-           "AND d.saleDate BETWEEN :startDate AND :endDate")
+           "AND d.salesDate BETWEEN :startDate AND :endDate")
     Integer getTotalOrders(@Param("restaurantId") Long restaurantId,
                           @Param("startDate") LocalDate startDate,
                           @Param("endDate") LocalDate endDate);
-    
+
     /**
      * Get average daily sales for a date range
      */
-    @Query("SELECT AVG(d.netSales) FROM DailySalesSummary d " +
+    @Query("SELECT AVG(d.totalRevenue) FROM DailySalesSummary d " +
            "WHERE d.restaurantId = :restaurantId " +
-           "AND d.saleDate BETWEEN :startDate AND :endDate")
+           "AND d.salesDate BETWEEN :startDate AND :endDate")
     BigDecimal getAverageDailySales(@Param("restaurantId") Long restaurantId,
                                    @Param("startDate") LocalDate startDate,
                                    @Param("endDate") LocalDate endDate);
-    
+
     /**
      * Get monthly sales summary
      */
-    @Query("SELECT YEAR(d.saleDate), MONTH(d.saleDate), SUM(d.netSales) " +
+    @Query("SELECT YEAR(d.salesDate), MONTH(d.salesDate), SUM(d.totalRevenue) " +
            "FROM DailySalesSummary d " +
            "WHERE d.restaurantId = :restaurantId " +
-           "AND d.saleDate BETWEEN :startDate AND :endDate " +
-           "GROUP BY YEAR(d.saleDate), MONTH(d.saleDate) " +
-           "ORDER BY YEAR(d.saleDate), MONTH(d.saleDate)")
+           "AND d.salesDate BETWEEN :startDate AND :endDate " +
+           "GROUP BY YEAR(d.salesDate), MONTH(d.salesDate) " +
+           "ORDER BY YEAR(d.salesDate), MONTH(d.salesDate)")
     List<Object[]> getMonthlySales(@Param("restaurantId") Long restaurantId,
                                    @Param("startDate") LocalDate startDate,
                                    @Param("endDate") LocalDate endDate);
-    
+
     /**
      * Check if summary exists for date
      */
-    boolean existsByRestaurantIdAndSaleDate(Long restaurantId, LocalDate saleDate);
-    
+    boolean existsByRestaurantIdAndSalesDate(Long restaurantId, LocalDate salesDate);
+
     /**
      * Delete summaries older than specified date
      */
-    void deleteByRestaurantIdAndSaleDateBefore(Long restaurantId, LocalDate date);
+    void deleteByRestaurantIdAndSalesDateBefore(Long restaurantId, LocalDate date);
 }
 
 // Made with Bob

@@ -87,6 +87,11 @@ public class BillItem {
             itemTotal = unitPrice.multiply(new BigDecimal(quantity));
         }
     }
+
+    /** Compatibility alias: returns unitPrice */
+    public BigDecimal getPrice() {
+        return unitPrice;
+    }
 }
 
 // Made with Bob

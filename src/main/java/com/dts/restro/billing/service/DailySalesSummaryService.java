@@ -6,6 +6,7 @@ import com.dts.restro.billing.entity.BillItem;
 import com.dts.restro.billing.entity.DailySalesSummary;
 import com.dts.restro.billing.enums.BillStatus;
 import com.dts.restro.billing.enums.PaymentMethod;
+import com.dts.restro.billing.repository.BillItemRepository;
 import com.dts.restro.billing.repository.BillRepository;
 import com.dts.restro.billing.repository.DailySalesSummaryRepository;
 import com.dts.restro.customer.entity.Customer;
@@ -36,6 +37,7 @@ public class DailySalesSummaryService {
     
     private final DailySalesSummaryRepository summaryRepository;
     private final BillRepository billRepository;
+    private final BillItemRepository billItemRepository;
     private final CustomerRepository customerRepository;
     
     /**
@@ -54,9 +56,11 @@ public class DailySalesSummaryService {
         // Get all bills for the date
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
-        List<Bill> bills = billRepository.findByRestaurantIdAndBillDateBetween(
-            restaurantId, startOfDay, endOfDay
-        );
+        List<Bill> bills = billRepository.findByRestaurantId(restaurantId).stream()
+            .filter(b -> b.getBillTime() != null
+                && !b.getBillTime().isBefore(startOfDay)
+                && b.getBillTime().isBefore(endOfDay))
+            .collect(Collectors.toList());
         
         // Find or create summary
         DailySalesSummary summary = summaryRepository
@@ -89,18 +93,18 @@ public class DailySalesSummaryService {
     public void updateSummaryOnBillPayment(Bill bill) {
         log.info("Updating daily summary for bill payment: {}", bill.getBillNumber());
         
-        LocalDate billDate = bill.getBillDate().toLocalDate();
+        LocalDate billDate = bill.getBillTime().toLocalDate();
         generateDailySummary(bill.getRestaurantId(), billDate);
     }
-    
+
     /**
      * Update summary when a bill is cancelled
      */
     @Transactional
     public void updateSummaryOnBillCancellation(Bill bill) {
         log.info("Updating daily summary for bill cancellation: {}", bill.getBillNumber());
-        
-        LocalDate billDate = bill.getBillDate().toLocalDate();
+
+        LocalDate billDate = bill.getBillTime().toLocalDate();
         generateDailySummary(bill.getRestaurantId(), billDate);
     }
     
@@ -133,12 +137,12 @@ public class DailySalesSummaryService {
         
         List<DailySalesSummary> summaries = summaryRepository
             .findByRestaurantIdAndSalesDateBetween(restaurantId, startDate, endDate);
-        
+
         return summaries.stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
     }
-    
+
     /**
      * Get summaries for a date range
      */
@@ -146,17 +150,17 @@ public class DailySalesSummaryService {
     public List<DailySalesSummaryDTO> getSummariesByDateRange(
         Long restaurantId, LocalDate startDate, LocalDate endDate
     ) {
-        log.info("Fetching summaries for restaurant {} from {} to {}", 
+        log.info("Fetching summaries for restaurant {} from {} to {}",
             restaurantId, startDate, endDate);
-        
+
         List<DailySalesSummary> summaries = summaryRepository
             .findByRestaurantIdAndSalesDateBetween(restaurantId, startDate, endDate);
-        
+
         return summaries.stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
     }
-    
+
     /**
      * Regenerate summary for a specific date
      * Useful for fixing data inconsistencies
@@ -194,7 +198,7 @@ public class DailySalesSummaryService {
             .collect(Collectors.toList());
         
         summary.setTotalRevenue(paidBills.stream()
-            .map(Bill::getFinalAmount)
+            .map(Bill::getGrandTotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add));
         
         summary.setSubtotalAmount(paidBills.stream()
@@ -206,25 +210,25 @@ public class DailySalesSummaryService {
             .reduce(BigDecimal.ZERO, BigDecimal::add));
         
         summary.setServiceChargeAmount(paidBills.stream()
-            .map(Bill::getServiceCharge)
+            .map(Bill::getServiceChargeAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add));
         
         summary.setPackagingChargeAmount(paidBills.stream()
-            .map(Bill::getPackagingCharge)
+            .map(Bill::getPackagingCharges)
             .reduce(BigDecimal.ZERO, BigDecimal::add));
         
         summary.setDeliveryChargeAmount(paidBills.stream()
-            .map(Bill::getDeliveryCharge)
+            .map(Bill::getDeliveryCharges)
             .reduce(BigDecimal.ZERO, BigDecimal::add));
         
         summary.setRoundOffAmount(paidBills.stream()
-            .map(Bill::getRoundOff)
+            .map(Bill::getRoundOffAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add));
         
         // Calculate pending amount
         summary.setPendingAmount(bills.stream()
             .filter(b -> b.getStatus() == BillStatus.PENDING)
-            .map(Bill::getFinalAmount)
+            .map(Bill::getGrandTotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add));
     }
     
@@ -257,27 +261,27 @@ public class DailySalesSummaryService {
         
         summary.setCashAmount(paidBills.stream()
             .filter(b -> b.getPaymentMethod() == PaymentMethod.CASH)
-            .map(Bill::getFinalAmount)
+            .map(Bill::getGrandTotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add));
         
         summary.setCardAmount(paidBills.stream()
             .filter(b -> b.getPaymentMethod() == PaymentMethod.CARD)
-            .map(Bill::getFinalAmount)
+            .map(Bill::getGrandTotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add));
         
         summary.setUpiAmount(paidBills.stream()
             .filter(b -> b.getPaymentMethod() == PaymentMethod.UPI)
-            .map(Bill::getFinalAmount)
+            .map(Bill::getGrandTotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add));
         
         summary.setNetBankingAmount(paidBills.stream()
             .filter(b -> b.getPaymentMethod() == PaymentMethod.NET_BANKING)
-            .map(Bill::getFinalAmount)
+            .map(Bill::getGrandTotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add));
         
         summary.setCreditAmount(paidBills.stream()
             .filter(b -> b.getPaymentMethod() == PaymentMethod.CREDIT)
-            .map(Bill::getFinalAmount)
+            .map(Bill::getGrandTotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add));
     }
     
@@ -324,14 +328,14 @@ public class DailySalesSummaryService {
         
         // Total items sold (sum of quantities)
         int totalItems = paidBills.stream()
-            .flatMap(b -> b.getItems().stream())
+            .flatMap(b -> billItemRepository.findByBillId(b.getId()).stream())
             .mapToInt(BillItem::getQuantity)
             .sum();
         summary.setTotalItemsSold(totalItems);
-        
+
         // Unique items sold (distinct menu items)
         Set<Long> uniqueMenuItems = paidBills.stream()
-            .flatMap(b -> b.getItems().stream())
+            .flatMap(b -> billItemRepository.findByBillId(b.getId()).stream())
             .map(BillItem::getMenuItemId)
             .collect(Collectors.toSet());
         summary.setUniqueItemsSold(uniqueMenuItems.size());

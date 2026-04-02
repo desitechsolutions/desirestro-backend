@@ -39,4 +39,10 @@ public interface KOTRepository extends JpaRepository<KOT, Long> {
 
     @Query("SELECT DISTINCT k FROM KOT k JOIN FETCH k.party p JOIN FETCH p.table WHERE k.status IN :statuses ORDER BY k.createdAt ASC")
     List<KOT> findActiveKOTsWithDetails(@Param("statuses") List<String> statuses);
+
+    long countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+
+    long countByRestaurantId(Long restaurantId);
+
+    long countByRestaurantIdAndCreatedAtBetween(Long restaurantId, LocalDateTime startDate, LocalDateTime endDate);
 }

@@ -21,11 +21,6 @@ import java.util.Optional;
 public interface BillRepository extends JpaRepository<Bill, Long> {
     
     /**
-     * Find bill by bill number and restaurant
-     */
-    Optional<Bill> findByRestaurantIdAndBillNumber(Long restaurantId, String billNumber);
-    
-    /**
      * Find bill by order ID
      */
     Optional<Bill> findByOrderId(Long orderId);
@@ -126,9 +121,53 @@ public interface BillRepository extends JpaRepository<Bill, Long> {
                                   @Param("endDate") LocalDateTime endDate);
     
     /**
+     * Find bill by restaurant and bill number
+     */
+    Optional<Bill> findByRestaurantIdAndBillNumber(Long restaurantId, String billNumber);
+
+    /**
+     * Find bills by restaurant and bill number prefix (for sequence generation)
+     */
+    List<Bill> findByRestaurantIdAndBillNumberStartingWith(Long restaurantId, String prefix);
+
+    /**
+     * Find bills by date range (non-pageable) — compatibility alias for findByDateRange
+     */
+    @Query("SELECT b FROM Bill b WHERE b.restaurantId = :restaurantId " +
+           "AND b.billTime BETWEEN :startDate AND :endDate " +
+           "ORDER BY b.billTime DESC")
+    List<Bill> findByRestaurantIdAndBillDateBetween(@Param("restaurantId") Long restaurantId,
+                                                    @Param("startDate") LocalDateTime startDate,
+                                                    @Param("endDate") LocalDateTime endDate);
+
+    /**
      * Check if bill number exists
      */
     boolean existsByRestaurantIdAndBillNumber(Long restaurantId, String billNumber);
+
+    /**
+     * Find all bills for a restaurant (non-pageable, used for revenue calculations)
+     */
+    List<Bill> findByRestaurantId(Long restaurantId);
+
+    /**
+     * Get daily bill statistics (count and total revenue) for a time range
+     */
+    @Query("SELECT COALESCE(SUM(b.grandTotal), 0), COUNT(b) FROM Bill b " +
+           "WHERE b.billTime BETWEEN :startDate AND :endDate " +
+           "AND b.isPaid = true AND b.isCancelled = false")
+    List<Object[]> getDailyBillStats(@Param("startDate") LocalDateTime startDate,
+                                     @Param("endDate") LocalDateTime endDate);
+
+    /**
+     * Get revenue grouped by day for a time range
+     */
+    @Query("SELECT DATE(b.billTime), COALESCE(SUM(b.grandTotal), 0) FROM Bill b " +
+           "WHERE b.billTime BETWEEN :startDate AND :endDate " +
+           "AND b.isPaid = true AND b.isCancelled = false " +
+           "GROUP BY DATE(b.billTime) ORDER BY DATE(b.billTime)")
+    List<Object[]> getRevenueByDay(@Param("startDate") LocalDateTime startDate,
+                                   @Param("endDate") LocalDateTime endDate);
 }
 
 // Made with Bob

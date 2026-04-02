@@ -87,7 +87,7 @@ public class SuperAdminService {
         
         // Calculate total revenue across all restaurants
         Double totalRevenue = billRepository.findAll().stream()
-                .mapToDouble(bill -> bill.getTotal() != null ? bill.getTotal() : 0.0)
+                .mapToDouble(bill -> bill.getGrandTotal() != null ? bill.getGrandTotal().doubleValue() : 0.0)
                 .sum();
         
         // Today's statistics
@@ -126,7 +126,7 @@ public class SuperAdminService {
         // Calculate total orders and revenue
         long totalOrders = kotRepository.countByRestaurantId(restaurantId);
         Double totalRevenue = billRepository.findByRestaurantId(restaurantId).stream()
-                .mapToDouble(bill -> bill.getTotal() != null ? bill.getTotal() : 0.0)
+                .mapToDouble(bill -> bill.getGrandTotal() != null ? bill.getGrandTotal().doubleValue() : 0.0)
                 .sum();
         
         // Today's statistics

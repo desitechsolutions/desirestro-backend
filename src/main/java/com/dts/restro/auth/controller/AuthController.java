@@ -67,7 +67,7 @@ public class AuthController {
 
         return ResponseEntity.status(201)
                 .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(refreshToken.getToken()).toString())
-                .body(ApiResponse.success("Registration successful", body));
+                .body(ApiResponse.success(body, "Registration successful"));
     }
 
     /** Authenticates a user and issues access + refresh tokens. */
@@ -84,7 +84,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(refreshToken.getToken()).toString())
-                .body(ApiResponse.success("Login successful", buildAuthResponse(user, accessToken)));
+                .body(ApiResponse.success(buildAuthResponse(user, accessToken), "Login successful"));
     }
 
     /** Rotates the refresh token and issues a new access token. */
@@ -105,7 +105,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, buildRefreshCookie(newRefreshToken.getToken()).toString())
-                .body(ApiResponse.success("Token refreshed", buildAuthResponse(user, newAccessToken)));
+                .body(ApiResponse.success(buildAuthResponse(user, newAccessToken), "Token refreshed"));
     }
 
     /** Logs out the user by revoking the refresh token. */
@@ -120,7 +120,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
-                .body(ApiResponse.success("Logged out successfully", null));
+                .body(ApiResponse.success(null, "Logged out successfully"));
     }
 
     /** Changes the authenticated user's password and invalidates all refresh tokens. */
@@ -139,7 +139,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
-                .body(ApiResponse.success("Password changed. Please log in again.", null));
+                .body(ApiResponse.success(null, "Password changed. Please log in again."));
     }
 
     @PostMapping("/forgot-password")
@@ -147,21 +147,21 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         passwordResetService.initiatePasswordReset(request);
         return ResponseEntity.ok(ApiResponse.success(
-            "If an account with that username/email exists, a reset link has been sent.", null));
+            null, "If an account with that username/email exists, a reset link has been sent."));
     }
 
     @PostMapping("/reset-password")
     @Operation(summary = "Reset password using the token from email")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         passwordResetService.resetPassword(request);
-        return ResponseEntity.ok(ApiResponse.success("Password reset successful. Please log in.", null));
+        return ResponseEntity.ok(ApiResponse.success(null, "Password reset successful. Please log in."));
     }
 
     @GetMapping("/validate-reset-token")
     @Operation(summary = "Check if a password reset token is still valid")
     public ResponseEntity<ApiResponse<Boolean>> validateResetToken(@RequestParam String token) {
         boolean valid = passwordResetService.validateToken(token);
-        return ResponseEntity.ok(ApiResponse.success("Token validation", valid));
+        return ResponseEntity.ok(ApiResponse.success(valid, "Token validation"));
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
